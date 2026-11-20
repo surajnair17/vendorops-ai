@@ -8,6 +8,7 @@ from backend.errors import AppError
 from backend.routes.comparisons import router as comparisons_router
 from backend.routes.documents import router
 from backend.routes.policies import router as policies_router
+from backend.routes.actions import router as actions_router
 from backend.routes.records import router as records_router
 
 logger = logging.getLogger("vendorops")
@@ -16,6 +17,7 @@ app.include_router(router)
 app.include_router(records_router)
 app.include_router(comparisons_router)
 app.include_router(policies_router)
+app.include_router(actions_router)
 
 
 @app.exception_handler(AppError)
