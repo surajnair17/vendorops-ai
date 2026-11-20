@@ -5,6 +5,40 @@ import streamlit as st
 from frontend.client import api
 
 
+def comparisons():
+    st.header("Compare an invoice with a purchase order")
+    records = api("GET", "/documents") or []
+    ready = [r for r in records if r["data"]["revision_id"]]
+    if not ready:
+        st.info("Upload and structure documents first.")
+        return
+    labels = {r["id"]: f"{r['data']['filename']} · {r['id'][:8]}" for r in ready}
+    invoice = st.selectbox("Invoice", list(labels), format_func=labels.get)
+    if st.button("Find purchase orders"):
+        result = api("GET", f"/documents/{invoice}/match-candidates")
+        if result:
+            st.json(result)
+    po = st.selectbox("Purchase order", ["Automatic", *labels], format_func=lambda x: labels.get(x, x))
+    mapping = st.text_input("Optional line mapping JSON (zero-based invoice index to PO index)", "")
+    if st.button("Compare documents"):
+        try:
+            payload = {"invoice_id": invoice, "po_id": None if po == "Automatic" else po,
+                       "line_mapping": json.loads(mapping) if mapping else None}
+            if result := api("POST", "/comparisons", json=payload):
+                st.json(result)
+        except ValueError:
+            st.error("The line mapping must be valid JSON.")
+    with st.expander("Confirmed supplier aliases"):
+        alias = st.text_input("Supplier alias")
+        canonical = st.text_input("Canonical supplier")
+        if st.button("Confirm alias"):
+            api("POST", "/supplier-aliases", json={"alias": alias, "canonical": canonical})
+    st.subheader("Reports")
+    for report in api("GET", "/comparisons") or []:
+        with st.expander(f"{report['id'][:8]} · {report['data']['status']}" + (" · STALE" if report["stale"] else "")):
+            st.json(report)
+
+
 def documents():
     st.header("Document workspace")
     st.caption(
