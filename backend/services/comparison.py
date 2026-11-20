@@ -1,5 +1,5 @@
-from decimal import Decimal, ROUND_HALF_UP
 import re
+from decimal import ROUND_HALF_UP, Decimal
 
 from backend import db
 from backend.errors import AppError
@@ -22,8 +22,10 @@ def current_business(connection, identifier: str):
 
 def supplier_key(connection, name: str | None) -> str:
     key = normalized(name)
-    aliases = {normalized(r["data"]["alias"]): normalized(r["data"]["canonical"])
-               for r in db.all_records(connection, "supplier_alias")}
+    aliases = {
+        normalized(r["data"]["alias"]): normalized(r["data"]["canonical"])
+        for r in db.all_records(connection, "supplier_alias")
+    }
     return aliases.get(key, key)
 
 
@@ -42,61 +44,106 @@ def match_candidates(connection, identifier: str) -> dict:
         if order.document_type != "purchase_order":
             continue
         supplier_match = bool(invoice.supplier and order.supplier) and (
-            supplier_key(connection, invoice.supplier) == supplier_key(connection, order.supplier))
-        exact = bool(invoice.po_number and order.document_number and supplier_match
-                     and normalized(invoice.po_number) == normalized(order.document_number))
-        candidates.append({"document_id": document["id"], "revision_id": revision["id"],
-                           "number": order.document_number, "supplier": order.supplier,
-                           "exact_match": exact, "supplier_match": supplier_match})
+            supplier_key(connection, invoice.supplier) == supplier_key(connection, order.supplier)
+        )
+        exact = bool(
+            invoice.po_number
+            and order.document_number
+            and supplier_match
+            and normalized(invoice.po_number) == normalized(order.document_number)
+        )
+        candidates.append(
+            {
+                "document_id": document["id"],
+                "revision_id": revision["id"],
+                "number": order.document_number,
+                "supplier": order.supplier,
+                "exact_match": exact,
+                "supplier_match": supplier_match,
+            }
+        )
     exact = [c for c in candidates if c["exact_match"]]
-    return {"candidates": candidates, "automatic_match": exact[0]["document_id"] if len(exact) == 1 else None}
+    return {
+        "candidates": candidates,
+        "automatic_match": exact[0]["document_id"] if len(exact) == 1 else None,
+    }
 
 
-def compare(invoice: BusinessDocument, order: BusinessDocument,
-            mapping: dict[int, int] | None = None) -> list[dict]:
+def compare(
+    invoice: BusinessDocument, order: BusinessDocument, mapping: dict[int, int] | None = None
+) -> list[dict]:
     findings = []
 
     def add(kind, field, expected=None, actual=None, evidence=None):
-        difference = actual - expected if isinstance(actual, Decimal) and isinstance(expected, Decimal) else None
-        findings.append({"type": kind, "field": field,
-                         "expected": str(expected) if expected is not None else None,
-                         "actual": str(actual) if actual is not None else None,
-                         "difference": str(difference) if difference is not None else None,
-                         "evidence": evidence or [], "review_status": "open"})
+        difference = (
+            actual - expected
+            if isinstance(actual, Decimal) and isinstance(expected, Decimal)
+            else None
+        )
+        findings.append(
+            {
+                "type": kind,
+                "field": field,
+                "expected": str(expected) if expected is not None else None,
+                "actual": str(actual) if actual is not None else None,
+                "difference": str(difference) if difference is not None else None,
+                "evidence": evidence or [],
+                "review_status": "open",
+            }
+        )
 
     if invoice.currency != order.currency or not invoice.currency:
         add("currency_mismatch", "currency", order.currency, invoice.currency)
         return findings
-    quantum = {"USD": "0.01", "INR": "0.01", "EUR": "0.01", "GBP": "0.01", "JPY": "1"}.get(invoice.currency)
+    quantum = {"USD": "0.01", "INR": "0.01", "EUR": "0.01", "GBP": "0.01", "JPY": "1"}.get(
+        invoice.currency
+    )
     if quantum is None:
         add("unsupported_currency", "currency", actual=invoice.currency)
         return findings
     rounding = Decimal(quantum)
     used = set()
-    if mapping is not None and (len(set(mapping.values())) != len(mapping)
-                               or any(i < 0 or i >= len(invoice.items) or j < 0 or j >= len(order.items)
-                                      for i, j in mapping.items())):
+    if mapping is not None and (
+        len(set(mapping.values())) != len(mapping)
+        or any(
+            i < 0 or i >= len(invoice.items) or j < 0 or j >= len(order.items)
+            for i, j in mapping.items()
+        )
+    ):
         raise AppError(422, "invalid_line_mapping", "Line mappings must be valid and one-to-one.")
     for index, item in enumerate(invoice.items):
         if mapping is not None and index in mapping:
             choices = [mapping[index]]
         else:
-            choices = [j for j, candidate in enumerate(order.items)
-                       if item.item_id and candidate.item_id
-                       and normalized(item.item_id) == normalized(candidate.item_id)]
+            choices = [
+                j
+                for j, candidate in enumerate(order.items)
+                if item.item_id
+                and candidate.item_id
+                and normalized(item.item_id) == normalized(candidate.item_id)
+            ]
             if not choices:
-                choices = [j for j, candidate in enumerate(order.items)
-                           if normalized(item.description) == normalized(candidate.description)
-                           and normalized(item.unit) == normalized(candidate.unit)]
+                choices = [
+                    j
+                    for j, candidate in enumerate(order.items)
+                    if normalized(item.description) == normalized(candidate.description)
+                    and normalized(item.unit) == normalized(candidate.unit)
+                ]
         if len(choices) != 1 or choices[0] in used:
-            add("ambiguous_line" if choices else "unexpected_item", f"items.{index}",
-                actual=item.description, evidence=[e.model_dump() for e in item.evidence])
+            add(
+                "ambiguous_line" if choices else "unexpected_item",
+                f"items.{index}",
+                actual=item.description,
+                evidence=[e.model_dump() for e in item.evidence],
+            )
             continue
         order_index = choices[0]
         used.add(order_index)
         expected = order.items[order_index]
-        evidence = {"invoice": [e.model_dump() for e in item.evidence],
-                    "purchase_order": [e.model_dump() for e in expected.evidence]}
+        evidence = {
+            "invoice": [e.model_dump() for e in item.evidence],
+            "purchase_order": [e.model_dump() for e in expected.evidence],
+        }
         if normalized(item.unit) != normalized(expected.unit) or not item.unit:
             add("unit_mismatch", f"items.{index}.unit", expected.unit, item.unit, evidence)
             continue
@@ -115,23 +162,36 @@ def compare(invoice: BusinessDocument, order: BusinessDocument,
             if any(value is None for value in values):
                 add("incomplete_calculation", f"{label}.items.{index}")
                 continue
-            expected = (item.quantity * item.unit_price - item.discount + item.tax).quantize(rounding, rounding=ROUND_HALF_UP)
+            expected = (item.quantity * item.unit_price - item.discount + item.tax).quantize(
+                rounding, rounding=ROUND_HALF_UP
+            )
             if expected != item.total:
                 add("line_total_mismatch", f"{label}.items.{index}.total", expected, item.total)
         if document.subtotal is not None and all(item.total is not None for item in document.items):
             subtotal = sum((item.total for item in document.items), Decimal(0))
             if subtotal != document.subtotal:
                 add("subtotal_mismatch", f"{label}.subtotal", subtotal, document.subtotal)
-        amounts = (document.subtotal, document.discount, document.tax, document.freight, document.total)
+        amounts = (
+            document.subtotal,
+            document.discount,
+            document.tax,
+            document.freight,
+            document.total,
+        )
         if any(amount is None for amount in amounts):
             add("incomplete_calculation", f"{label}.total")
         else:
-            expected = (document.subtotal - document.discount + document.tax + document.freight).quantize(rounding, rounding=ROUND_HALF_UP)
+            expected = (
+                document.subtotal - document.discount + document.tax + document.freight
+            ).quantize(rounding, rounding=ROUND_HALF_UP)
             if expected != document.total:
                 add("total_mismatch", f"{label}.total", expected, document.total)
     return findings
 
 
 def report_is_stale(connection, report: dict) -> bool:
-    return any(db.get(connection, report["data"][f"{side}_id"], "document")["data"]["revision_id"]
-               != report["data"][f"{side}_revision_id"] for side in ("invoice", "po"))
+    return any(
+        db.get(connection, report["data"][f"{side}_id"], "document")["data"]["revision_id"]
+        != report["data"][f"{side}_revision_id"]
+        for side in ("invoice", "po")
+    )

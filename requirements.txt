@@ -7,3 +7,4 @@ PyMuPDF>=1.25,<2
 streamlit>=1.42,<2
 httpx>=0.28,<1
 SQLAlchemy>=2.0,<3
+chromadb>=1.0,<2

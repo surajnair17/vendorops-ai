@@ -5,6 +5,78 @@ import streamlit as st
 from frontend.client import api
 
 
+def policies():
+    st.header("Policies and confirmed rules")
+    st.caption("Fixture retrieval is lexical test plumbing. It does not measure semantic accuracy.")
+    with st.form("policy_upload"):
+        name = st.text_input("Policy name", "Purchasing")
+        version = st.text_input("Policy version", "1")
+        effective = st.date_input("Effective date")
+        text = st.text_area("Policy text", "Invoice price variance up to 10 percent is permitted.")
+        if st.form_submit_button("Save and index inactive policy"):
+            api(
+                "POST",
+                "/policies",
+                json={
+                    "name": name,
+                    "policy_version": version,
+                    "effective_date": effective.isoformat(),
+                    "text": text,
+                },
+            )
+    records = api("GET", "/policies") or []
+    for policy in records:
+        with st.expander(
+            f"{policy['data']['name']} v{policy['data']['policy_version']}"
+            f" · active={policy['data']['active']}"
+        ):
+            st.json(policy)
+            if st.button("Toggle activation", key=f"activate-{policy['id']}"):
+                if api(
+                    "POST",
+                    f"/policies/{policy['id']}/activate",
+                    json={
+                        "active": not policy["data"]["active"],
+                        "expected_version": policy["version"],
+                    },
+                ):
+                    st.rerun()
+    if records:
+        with st.form("rule"):
+            selected = st.selectbox("Source policy", [r["id"] for r in records])
+            chunk = st.text_input("Source chunk ID", "p1-c1")
+            kind = st.selectbox(
+                "Rule type",
+                [
+                    "price_variance_percent",
+                    "quantity_overage_percent",
+                    "required_field",
+                    "invoice_value_threshold",
+                ],
+            )
+            value = st.text_input("Rule value", "10")
+            if st.form_submit_button("Save unconfirmed rule"):
+                api(
+                    "POST",
+                    "/rules",
+                    json={
+                        "policy_id": selected,
+                        "chunk_id": chunk,
+                        "rule_type": kind,
+                        "value": value,
+                    },
+                )
+    for rule in api("GET", "/rules") or []:
+        st.json(rule)
+        if st.button("Confirm / revoke this rule", key=f"confirm-{rule['id']}"):
+            if api(
+                "POST",
+                f"/rules/{rule['id']}/confirm",
+                json={"active": not rule["data"]["confirmed"], "expected_version": rule["version"]},
+            ):
+                st.rerun()
+
+
 def comparisons():
     st.header("Compare an invoice with a purchase order")
     records = api("GET", "/documents") or []
@@ -18,12 +90,17 @@ def comparisons():
         result = api("GET", f"/documents/{invoice}/match-candidates")
         if result:
             st.json(result)
-    po = st.selectbox("Purchase order", ["Automatic", *labels], format_func=lambda x: labels.get(x, x))
+    po = st.selectbox(
+        "Purchase order", ["Automatic", *labels], format_func=lambda x: labels.get(x, x)
+    )
     mapping = st.text_input("Optional line mapping JSON (zero-based invoice index to PO index)", "")
     if st.button("Compare documents"):
         try:
-            payload = {"invoice_id": invoice, "po_id": None if po == "Automatic" else po,
-                       "line_mapping": json.loads(mapping) if mapping else None}
+            payload = {
+                "invoice_id": invoice,
+                "po_id": None if po == "Automatic" else po,
+                "line_mapping": json.loads(mapping) if mapping else None,
+            }
             if result := api("POST", "/comparisons", json=payload):
                 st.json(result)
         except ValueError:
@@ -35,8 +112,14 @@ def comparisons():
             api("POST", "/supplier-aliases", json={"alias": alias, "canonical": canonical})
     st.subheader("Reports")
     for report in api("GET", "/comparisons") or []:
-        with st.expander(f"{report['id'][:8]} · {report['data']['status']}" + (" · STALE" if report["stale"] else "")):
+        with st.expander(
+            f"{report['id'][:8]} · {report['data']['status']}"
+            + (" · STALE" if report["stale"] else "")
+        ):
             st.json(report)
+            if st.button("Assess policy", key=f"assess-{report['id']}"):
+                if result := api("POST", f"/comparisons/{report['id']}/policy-assessments"):
+                    st.json(result)
 
 
 def documents():

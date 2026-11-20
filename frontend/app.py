@@ -9,9 +9,15 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 st.set_page_config(page_title="VendorOps AI", page_icon="📄", layout="wide")
 st.title("VendorOps AI")
-page = st.sidebar.radio("Workspace", ["PDF Text", "Documents", "Compare"])
+page = st.sidebar.radio("Workspace", ["PDF Text", "Documents", "Compare", "Policies"])
+if page == "Policies":
+    from frontend.workspace import policies
+
+    policies()
+    st.stop()
 if page == "Compare":
     from frontend.workspace import comparisons
+
     comparisons()
     st.stop()
 if page == "Documents":
