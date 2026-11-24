@@ -69,7 +69,12 @@ only frontend dependencies.
 
 ## AWS preparation and approval gate
 
-The template creates one t3.medium host, an encrypted retained root volume, a private S3 bucket,
+For the selected **Free-plan / local OCR** deployment, use [AWS setup](aws-setup.md). The template
+now defaults to t3.small, creates Textract/SNS/SQS only when `EnableTextract=true`, and bootstraps a
+pinned `ReleaseCommit` automatically. The following Textract-specific details describe the optional
+Paid-plan variant. Both live application flags remain false after bootstrap.
+
+The optional Paid-plan configuration can use one t3.medium host, an encrypted retained volume, a private S3 bucket,
 Textract notification role, SNS/SQS/dead-letter queue, application IAM role, a log group, queue alarm,
 and a monthly budget alert. It uses an existing VPC and public subnet with outbound Internet access.
 There are no inbound application or SSH rules; the assigned IPv4 address supports outbound access.
@@ -96,8 +101,8 @@ parameters: `VpcId`, `PublicSubnetId`, `SenderEmail`, `TestRecipientEmail`, `Bud
 `MonthlyBudgetUSD`. Deploy `backend/infra/cloudformation.yaml` with `CAPABILITY_IAM`, then record
 all stack outputs. Do not deploy until the estimate and parameter values have been reviewed.
 
-The instance installs Docker and Git. Install Compose using the official guide, copy a reviewed
-release into `/opt/vendorops`, and create backend/frontend configuration there. The instance role
+The instance installs Docker, Git, and checksum-verified pinned Compose, checks out the reviewed
+release into `/opt/vendorops`, and creates backend configuration from stack references. The instance role
 permits release objects under the bucket's `releases/` prefix. No repository URL or access token is
 embedded in the template. A release archive can be produced with `git archive` after committing
 the intended source.

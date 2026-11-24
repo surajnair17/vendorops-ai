@@ -6,6 +6,7 @@ Generate the synthetic corpus before running the two offline checks:
 .\.venv\Scripts\python.exe -m backend.scripts.generate_samples
 .\.venv\Scripts\python.exe -m backend.scripts.evaluate
 .\.venv\Scripts\python.exe -m backend.scripts.evaluate_retrieval
+.\.venv\Scripts\python.exe -m backend.scripts.evaluate_ocr
 ```
 
 The corpus has 60 digital documents, 20 scanned invoice variants, five policies, labelled queries,
@@ -16,6 +17,13 @@ Fixture extraction maps exact known text to predetermined data. Its scores test 
 The fixture embedding hashes words; its retrieval score tests index plumbing. Neither establishes
 live accuracy. The five-policy set makes recall@5 especially weak; add distractors and held-out
 queries before using the 90% target as a meaningful release claim.
+
+The OCR check runs the actual local Tesseract engine against held-out scans, without cloud calls.
+It reports exact Levenshtein character error rate after collapsing whitespace, keeps case and
+punctuation, and reports failed documents separately. Its default test split contains five scans;
+use `--split all` for all 20 scans, without labelling those results held-out. It does not run an LLM
+or establish structured extraction accuracy. GitHub Actions installs Tesseract and publishes the
+offline evaluation JSON as a workflow artifact.
 
 ## Measured fields
 

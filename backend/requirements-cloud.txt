@@ -1,2 +1,2 @@
 -r requirements.txt
-boto3>=1.36,<2
+boto3[crt]>=1.42,<2

@@ -36,6 +36,9 @@ def evaluate(policies: list[dict], queries: list[dict]) -> dict:
                         "active": True,
                         "indexed": True,
                         "index_provider": settings.provider,
+                        "embedding_model_id": settings.embedding_model_id
+                        if settings.provider == "bedrock"
+                        else None,
                         "chunks": chunks_for([policy["text"]]),
                     },
                     policy["name"],

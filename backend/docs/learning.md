@@ -50,6 +50,15 @@ email invalidates approval, and why a timeout after sending must not trigger an 
 
 ## Phase 6: cloud
 
+Start with [the AWS learning guide](aws-setup.md). Explain the difference between a Free-plan credit
+allowance and a cash budget. Predict which resources a plan with `enable_textract=false` creates,
+then compare with the CloudFormation conditions. Change the demo hours in an ignored deployment
+record and show how the estimate and review digest change without contacting AWS.
+
+Decision: local OCR keeps scanned PDFs available on the selected Free plan. Regional Nova Lite
+avoids the cross-region inference restriction. Explain why Tesseract OCR output is still uncertain
+and why SDK stubs do not establish actual account permissions or model accuracy.
+
 Trace an OCR job through storage, Textract, SNS, SQS, and the worker. Explain each IAM permission.
 Restart the worker during a job. Compare recorded usage with an actual bill and explain fixed
 hosting costs versus per-document costs. Restore a backup before claiming recovery works.

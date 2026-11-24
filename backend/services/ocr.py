@@ -9,12 +9,13 @@ from backend.services.cloud import aws_client, put_source, require_live, reserve
 
 
 def start_ocr_once() -> bool:
-    if not settings.live_calls_enabled:
+    if not settings.live_calls_enabled or settings.ocr_provider != "textract":
         return False
     with db.transaction() as connection:
         for waiting in db.all_records(connection, "job"):
             if (
                 waiting["data"].get("kind") == "ocr"
+                and waiting["data"].get("provider", "textract") == "textract"
                 and waiting["data"]["status"] == "waiting"
                 and datetime.fromisoformat(waiting["created_at"])
                 < datetime.now(UTC) - timedelta(days=6)
@@ -28,6 +29,7 @@ def start_ocr_once() -> bool:
             j
             for j in db.all_records(connection, "job")
             if j["data"].get("kind") == "ocr"
+            and j["data"].get("provider", "textract") == "textract"
             and (
                 j["data"]["status"] == "queued"
                 or j["data"]["status"] == "starting"
@@ -150,12 +152,20 @@ def complete_ocr(notification: dict) -> bool:
             next_token = result.get("NextToken")
             if not next_token:
                 break
+    return apply_ocr_result(job["id"], pages, status, "textract")
+
+
+def apply_ocr_result(job_id: str, pages: list[list[str]], status: str, provider: str) -> bool:
     with db.transaction() as connection:
-        current = db.get(connection, job["id"], "job")
+        current = db.get(connection, job_id, "job")
         if current["data"]["status"] in {"succeeded", "failed"}:
             return True
-        document = db.get(connection, document["id"], "document")
-        if status != "SUCCEEDED" or document["version"] != job["data"]["document_version"]:
+        document = db.get(connection, current["data"]["document_id"], "document")
+        if (
+            status != "SUCCEEDED"
+            or document["version"] != current["data"]["document_version"]
+            or len(pages) != document["data"]["page_count"]
+        ):
             db.update(
                 connection,
                 current,
@@ -178,8 +188,8 @@ def complete_ocr(notification: dict) -> bool:
                 "original_pages": document["data"]["pages"],
                 "ocr_pages": ["\n".join(p) for p in pages],
                 "combined_pages": combined,
-                "provider": "textract",
-                "job_id": job["id"],
+                "provider": provider,
+                "job_id": job_id,
             },
         )
         db.update(
@@ -190,7 +200,7 @@ def complete_ocr(notification: dict) -> bool:
                 "pages": combined,
                 "revision_id": None,
                 "ocr_status": "completed",
-                "s3_key": job["data"]["s3_key"],
+                "s3_key": current["data"].get("s3_key", document["data"].get("s3_key")),
             },
         )
         db.update(
@@ -198,12 +208,27 @@ def complete_ocr(notification: dict) -> bool:
             current,
             {**current["data"], "status": "succeeded", "page_count": len(pages)},
         )
-        db.audit(connection, document["id"], "ocr_completed", {"job_id": job["id"]})
+        for usage in db.all_records(connection, "usage"):
+            if usage["data"].get("token") == job_id and usage["data"]["kind"] == "ocr":
+                db.update(
+                    connection,
+                    usage,
+                    {
+                        **usage["data"],
+                        "status": "completed",
+                        "page_count": len(pages),
+                    },
+                )
+        db.audit(connection, document["id"], "ocr_completed", {"job_id": job_id})
     return True
 
 
 def poll_ocr_once() -> bool:
-    if not settings.live_calls_enabled or not settings.sqs_queue_url:
+    if (
+        not settings.live_calls_enabled
+        or settings.ocr_provider != "textract"
+        or not settings.sqs_queue_url
+    ):
         return False
     require_live()
     sqs = aws_client("sqs")

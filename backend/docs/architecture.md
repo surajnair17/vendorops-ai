@@ -16,6 +16,7 @@ flowchart LR
   J --> W[Worker]
   W --> S[Simulated email / SES]
   W --> T[Textract]
+  W --> O[Local Tesseract OCR]
   T --> N[SNS and SQS]
   N --> W
 ```
@@ -36,6 +37,10 @@ flowchart LR
   Uncertain delivery is reconciled by a human; SES acceptance is not proof of inbox arrival.
 - The deployment is one private host and one operator. No public authentication, tenant isolation,
   high availability, payment processing, or compliance certification is claimed.
+- The Free-plan deployment uses a regional Nova Lite model and local Tesseract for scans. Textract,
+  its IAM permissions, and SNS/SQS infrastructure are optional and require a Paid plan. Local OCR
+  rasterizes only textless pages with page/time/pixel bounds; it preserves digital text, records
+  provenance, rejects stale results, and recovers expired worker leases.
 
 Read the PDF service and route first, then trace one structured field, one finding, one confirmed
 rule, and one approved action. Inspect cloud adapters after understanding that local flow.

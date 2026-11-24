@@ -24,8 +24,15 @@ def list_jobs(document_id: str | None = None):
 
 @router.post("/documents/{identifier}/ocr", status_code=202)
 def request_ocr(identifier: str):
-    require_live()
-    if not all(
+    if settings.ocr_provider == "disabled":
+        raise AppError(403, "ocr_disabled", "OCR is disabled in this deployment.")
+    if settings.ocr_provider == "textract":
+        require_live()
+    if settings.ocr_provider == "local":
+        from backend.services.local_ocr import require_tesseract
+
+        require_tesseract()
+    if settings.ocr_provider == "textract" and not all(
         (
             settings.s3_bucket,
             settings.sns_topic_arn,
@@ -57,6 +64,7 @@ def request_ocr(identifier: str):
             "job",
             {
                 "kind": "ocr",
+                "provider": settings.ocr_provider,
                 "status": "queued",
                 "document_id": identifier,
                 "document_version": document["version"],
@@ -75,7 +83,14 @@ def reindex(identifier: str):
         return db.update(
             connection,
             policy,
-            {**policy["data"], "indexed": True, "index_provider": settings.provider},
+            {
+                **policy["data"],
+                "indexed": True,
+                "index_provider": settings.provider,
+                "embedding_model_id": settings.embedding_model_id
+                if settings.provider == "bedrock"
+                else None,
+            },
         )
 
 
@@ -89,6 +104,8 @@ def metrics():
             "provider": settings.provider,
             "live_calls_enabled": settings.live_calls_enabled,
             "live_send_enabled": settings.live_send_enabled,
+            "ocr_provider": settings.ocr_provider,
+            "model_id": settings.model_id if settings.provider == "bedrock" else None,
             "operator": settings.operator,
             "documents": len(db.all_records(connection, "document")),
             "job_statuses": dict(Counter(j["data"]["status"] for j in jobs)),

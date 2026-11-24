@@ -1,4 +1,30 @@
-# Verification record — November 24, 2026
+# Verification record — November 25, 2026
+
+## AWS integration update
+
+- The user chose an AWS Free plan with local OCR. Tesseract is now integrated through the durable
+  worker, with time/page/raster limits, provenance, stale-result protection, and restart recovery.
+  The Windows engine was installed and a real scanned-PDF upload/job test passed.
+- The final 69-test suite passed including real local OCR and SDK request-shape checks for
+  Converse, Titan, SES, and encrypted S3 upload. The real HTTP/Streamlit/simulated-worker smoke passed.
+- Five held-out synthetic scans completed local OCR with zero failures and zero character errors
+  across 1,120 reference characters after whitespace normalization. This small result does not
+  establish performance on customer scans or live structured extraction accuracy.
+- The separate all-scan benchmark completed all 20 synthetic scans with zero failures and zero
+  whitespace-normalized character errors across 4,210 reference characters. Those results include
+  development examples and must not be presented as a held-out benchmark.
+- Added offline deployment planning, declared-credit allowance checks, read-only preflight, and
+  explicit deployment bound to a reviewed plan digest. Bootstrap installs verified Compose, checks
+  out a pinned public commit, starts containers, and signals CloudFormation readiness.
+- Free-plan infrastructure uses t3.small and omits Textract/SNS/SQS by default. Regional Nova Lite
+  replaces the cross-region profile; project resource Region and Bedrock API Region are configurable.
+- AWS CLI v2.42.3 was extracted locally from a signature-verified Amazon installer. Browser login
+  was started and expired before authorization; no AWS profile was available at the readiness check. Login troubleshooting
+  is in progress; AWS's new signup uses Builder ID/project selection rather than the root form.
+- No AWS deployment, live model call, S3 upload, or real email has been performed. Account sign-in,
+  actual project Region, remaining credits/allowance, and verified SES identities remain required.
+
+See [AWS setup](aws-setup.md) for the reviewed deployment process and learning exercises.
 
 ## Local milestone
 
@@ -39,8 +65,9 @@ Reproducible benchmark JSON is generated under the ignored `backend/artifacts/` 
 
 - No paid AWS model, embedding, OCR, S3, or SES calls have been made.
 - No AWS resources have been provisioned; actual deployment and IAM access remain unverified.
-- Docker and AWS CLI are unavailable on this machine. Dockerfile/Compose runtime behavior still
-  requires Docker. CI contains Compose and infrastructure checks, but has not been run on GitHub.
+- Docker is unavailable on this machine. AWS CLI is available through the local path above.
+  Dockerfile/Compose runtime behavior still
+  requires Docker. The updated CI now builds containers and checks server startup on Linux.
 - No real email was delivered. SES stubs establish request shape; a verified inbox check is separate.
 - Live extraction, semantic retrieval, OCR accuracy, processing costs, and release accuracy targets
   remain unmeasured. Saved outputs can be scored without calling paid services.

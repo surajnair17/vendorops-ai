@@ -51,7 +51,12 @@ def collection():
         else chromadb.PersistentClient(path=str(settings.data_dir / "vectors"), settings=options)
     )
     return client.get_or_create_collection(
-        f"policies-{settings.provider}-v1",
+        f"policies-{settings.provider}-v1"
+        + (
+            "-" + hashlib.sha256(settings.embedding_model_id.encode()).hexdigest()[:12]
+            if settings.provider == "bedrock"
+            else ""
+        ),
         embedding_function=None,
         metadata={"hnsw:space": "cosine"},
     )
@@ -88,6 +93,9 @@ def retrieve(connection, query: str, vector_store=None, query_vector=None) -> li
     if any(
         not db.get(connection, p["id"])["data"].get("indexed")
         or db.get(connection, p["id"])["data"].get("index_provider") != settings.provider
+        or settings.provider == "bedrock"
+        and db.get(connection, p["id"])["data"].get("embedding_model_id")
+        != settings.embedding_model_id
         for p in active
     ):
         raise AppError(409, "reindex_required", "Reindex active policies for the current provider.")

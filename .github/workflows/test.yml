@@ -14,12 +14,18 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.13'}
       - run: pip install -r backend/requirements-dev.txt -r backend/requirements-cloud.txt -r frontend/requirements-dev.txt
+      - run: sudo apt-get update && sudo apt-get install -y tesseract-ocr
       - run: python -m ruff check .
       - run: python -m pytest -q
       - run: python -m backend.scripts.smoke
       - run: python -m backend.scripts.generate_samples
       - run: python -m backend.scripts.evaluate
       - run: python -m backend.scripts.evaluate_retrieval
+      - run: python -m backend.scripts.evaluate_ocr
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline-evaluation
+          path: backend/artifacts/*evaluation.json
   infrastructure:
     runs-on: ubuntu-latest
     steps:
@@ -30,3 +36,8 @@ jobs:
       - run: cfn-lint backend/infra/cloudformation.yaml
       - run: cp backend/.env.example backend/.env
       - run: docker compose -f backend/infra/compose.yaml config --quiet
+      - run: docker compose -f backend/infra/compose.yaml build
+      - run: docker compose -f backend/infra/compose.yaml up --detach --wait --wait-timeout 180
+      - run: curl --fail http://127.0.0.1:8000/health && curl --fail http://127.0.0.1:8501/_stcore/health
+      - if: always()
+        run: docker compose -f backend/infra/compose.yaml down

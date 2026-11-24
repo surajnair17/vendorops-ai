@@ -5,7 +5,35 @@ budget and opt-in flags; its limits count reserved attempts, including failures.
 calls share a daily allowance. OCR counts jobs (each can include up to the configured page maximum),
 and email has a separate send allowance. None of these replace AWS billing controls.
 
-## Illustrative hosting estimate, checked November 24, 2026
+## Free-plan selection, checked November 25, 2026
+
+The user selected the Free plan and local OCR. AWS lists **t3.small** among its
+[Free-plan eligible compute types](https://aws.amazon.com/free/compute/). The default now uses that
+2 GiB host, with 2 GiB swap on encrypted EBS for the small demonstration. Textract requires the
+Paid plan in the [current supported-services list](https://docs.aws.amazon.com/accounts/latest/reference/supported-services-sign-up-new.html),
+so local Tesseract replaces it in the selected deployment. No account upgrade is required by the code.
+
+The [Free plan](https://aws.amazon.com/free/) uses credits and ends after six months or when credits
+run out. Credits are not unlimited service usage. Keep the plan unchanged and check the current
+balance in Billing. The proposed **$10 allowance is credit consumption**, with **$0 out-of-pocket**;
+it is awaiting the user's agreement. The app's budget variable tracks that allowance, not a cash bill.
+
+| Default component | 730-hour month | 32 hours, storage kept all month |
+|---|---:|---:|
+| t3.small at $0.0209/hour | $15.26 | $0.67 |
+| IPv4 at $0.005/hour | $3.65 | $0.16 |
+| 30GB gp3 at assumed $0.08/GB-month | $2.40 | $2.40 |
+| Hosting subtotal | **$21.31** | **$3.23** |
+
+Rates exclude AI, embedding, SES, S3, logs, requests, transfer, and taxes. Local OCR has no per-page
+AWS OCR charge; it consumes the host's compute/storage. Daily application limits and budget alerts
+do not enforce total account spend. The estimated 32-hour runtime is a plan, not an automatic stop.
+
+Generate an offline estimate and review record with `python -m backend.scripts.aws_setup plan
+--config backend/artifacts/aws/deployment.json`. See [AWS setup](aws-setup.md) for account/identity
+checks and the reviewed deployment operation.
+
+## Earlier t3.medium alternative
 
 For Linux in us-east-1, the [AWS T3 table](https://aws.amazon.com/ec2/instance-types/t3/) shows
 t3.medium at **$0.0418/hour**. [Public IPv4 pricing](https://aws.amazon.com/vpc/pricing/) lists

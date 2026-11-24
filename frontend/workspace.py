@@ -296,7 +296,7 @@ def documents():
             with st.spinner("Extracting…"):
                 if api("POST", f"/documents/{selected}/structure"):
                     st.rerun()
-        if st.button("Request live OCR (requires cloud configuration)"):
+        if st.button("Request OCR for scanned pages"):
             if job := api("POST", f"/documents/{selected}/ocr"):
                 st.session_state["ocr_job"] = job["job_id"]
         if jobs := api("GET", "/jobs", params={"document_id": selected}):

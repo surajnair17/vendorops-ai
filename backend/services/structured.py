@@ -54,6 +54,7 @@ def extract_structure(text: str, pages: list[str], provider=None) -> dict:
                 "attempts": attempt + 1,
                 "schema_version": 1,
                 "prompt_version": 1,
+                "model_id": settings.model_id if provider.mode == "bedrock" else None,
             }
         except (ValidationError, json.JSONDecodeError):
             continue
@@ -67,4 +68,5 @@ def extract_structure(text: str, pages: list[str], provider=None) -> dict:
         "attempts": 2,
         "schema_version": 1,
         "prompt_version": 1,
+        "model_id": settings.model_id if provider.mode == "bedrock" else None,
     }

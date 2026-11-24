@@ -54,7 +54,14 @@ def save_policy(payload: PolicyInput, pages: list[str]):
         return db.update(
             connection,
             policy,
-            {**policy["data"], "indexed": True, "index_provider": settings.provider},
+            {
+                **policy["data"],
+                "indexed": True,
+                "index_provider": settings.provider,
+                "embedding_model_id": settings.embedding_model_id
+                if settings.provider == "bedrock"
+                else None,
+            },
         )
 
 

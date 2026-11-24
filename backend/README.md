@@ -14,6 +14,8 @@ Run from the repository root:
 Settings come from backend/.env; environment variables take precedence. Runtime data defaults
 to backend/data. requirements-cloud.txt adds boto3; requirements-dev.txt adds testing tools.
 No AWS client is created during import.
+Local OCR uses a separately installed Tesseract executable (`VENDOROPS_TESSERACT_COMMAND`); the
+backend container includes it. Deployment and local-login instructions are in [AWS setup](docs/aws-setup.md).
 
 The repository stores validated JSON snapshots in SQLite through SQLAlchemy. Documents,
 revisions, comparisons, policies, actions, and jobs have separate record kinds. BEGIN IMMEDIATE

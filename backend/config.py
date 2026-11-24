@@ -18,7 +18,12 @@ class Settings(BaseSettings):
     live_calls_enabled: bool = False
     live_send_enabled: bool = False
     aws_region: str = "us-east-1"
-    model_id: str = "us.amazon.nova-lite-v1:0"
+    bedrock_region: str = ""
+    model_id: str = "amazon.nova-lite-v1:0"
+    embedding_model_id: str = "amazon.titan-embed-text-v2:0"
+    ocr_provider: Literal["local", "textract", "disabled"] = "local"
+    tesseract_command: str = "tesseract"
+    ocr_page_timeout_seconds: int = Field(default=60, gt=0, le=300)
     operator: str = "demo-operator"
     recipient_allowlist: str = "reviewer@example.test"
     approved_monthly_budget_usd: float = Field(default=0, ge=0, allow_inf_nan=False)

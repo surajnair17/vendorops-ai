@@ -33,7 +33,9 @@ def aws_client(service: str):
 
     return boto3.client(
         service,
-        region_name=settings.aws_region,
+        region_name=(settings.bedrock_region or settings.aws_region)
+        if service == "bedrock-runtime"
+        else settings.aws_region,
         config=Config(connect_timeout=5, read_timeout=45, retries={"total_max_attempts": 1}),
     )
 
@@ -149,7 +151,7 @@ def embed_text(text: str, connection=None) -> list[float]:
     started = monotonic()
     try:
         response = aws_client("bedrock-runtime").invoke_model(
-            modelId="amazon.titan-embed-text-v2:0",
+            modelId=settings.embedding_model_id,
             contentType="application/json",
             accept="application/json",
             body=json.dumps({"inputText": text, "dimensions": 1024, "normalize": True}),
@@ -170,7 +172,7 @@ def embed_text(text: str, connection=None) -> list[float]:
         "completed",
         connection,
         inputTokens=payload.get("inputTextTokenCount"),
-        model_id="amazon.titan-embed-text-v2:0",
+        model_id=settings.embedding_model_id,
         latency_seconds=monotonic() - started,
     )
     return vector

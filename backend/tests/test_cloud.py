@@ -10,6 +10,7 @@ from backend.services.ocr import complete_ocr, start_ocr_once
 
 def test_cloud_disabled_before_sdk_is_called(client, monkeypatch):
     monkeypatch.setattr(settings, "live_calls_enabled", False)
+    monkeypatch.setattr(settings, "ocr_provider", "textract")
     with pytest.raises(AppError) as error:
         BedrockProvider().extract("hello")
     assert error.value.code == "live_calls_disabled"
@@ -164,6 +165,7 @@ def test_failed_embedding_counts_toward_budget(client, monkeypatch):
 
 
 def test_ocr_start_recovers_with_same_token_and_bounds_retries(client, monkeypatch):
+    monkeypatch.setattr(settings, "ocr_provider", "textract")
     monkeypatch.setattr(settings, "live_calls_enabled", True)
     monkeypatch.setattr(settings, "approved_monthly_budget_usd", 1)
     document = client.post("/api/v1/documents", files={"file": ("scan.pdf", make_pdf(""))}).json()

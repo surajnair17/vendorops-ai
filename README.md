@@ -78,11 +78,15 @@ known responses and deterministic logic; they do not establish real model accura
 Implemented locally: PDF extraction, exact synthetic extraction fixtures, revisioned corrections,
 matching, decimal comparisons, Chroma retrieval, confirmed rules, approval-bound drafts,
 durable simulated delivery, audit history, backup/restore, and an evaluation harness.
+Local Tesseract OCR processes scanned pages through durable jobs without paid OCR calls. The backend
+container installs Tesseract; a native Windows run needs its executable configured separately.
 
 Prepared for live verification: Bedrock, Titan, S3, asynchronous Textract/SNS/SQS, SES, EC2, and
 CloudWatch. Deployment, live OCR/model accuracy, inbox delivery, and cloud costs are not claimed
 as verified. Read [verification status](backend/docs/status.md) and
 [operations](backend/docs/operations.md).
+For the selected Free-plan deployment, follow [AWS setup](backend/docs/aws-setup.md). It includes
+an offline cost/resource plan, read-only AWS checks, and explicit deployment of a pinned release.
 The [demo guide](backend/docs/demo.md) and [evaluation guide](backend/docs/evaluation.md) explain
 the complete local walkthrough and the separate live verification gates.
 

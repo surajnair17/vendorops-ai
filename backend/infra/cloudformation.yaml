@@ -21,6 +21,26 @@ Parameters:
     Type: Number
     MinValue: 1
     Description: Explicitly agreed budget; alerts do not cap charges.
+  EnableTextract:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: Paid-plan service; keep false for a Free-plan deployment using local OCR.
+  ReleaseCommit:
+    Type: String
+    AllowedPattern: '[a-f0-9]{40}'
+    Description: Reviewed commit in the public surajnair17/vendorops-ai repository.
+  InstanceType:
+    Type: String
+    Default: t3.small
+    AllowedValues: [t3.small, t3.medium]
+    Description: t3.small supports the new Free plan; t3.medium needs a Paid plan.
+  BedrockRegion:
+    Type: String
+    Default: us-east-1
+    Description: Region for the regional Nova Lite and Titan model APIs (no inference profile).
+Conditions:
+  UseTextract: !Equals [!Ref EnableTextract, 'true']
 Resources:
   Documents:
     Type: AWS::S3::Bucket
@@ -55,13 +75,16 @@ Resources:
             Condition: {Bool: {'aws:SecureTransport': 'false'}}
   CompletionTopic:
     Type: AWS::SNS::Topic
+    Condition: UseTextract
   DeadLetters:
     Type: AWS::SQS::Queue
+    Condition: UseTextract
     Properties:
       SqsManagedSseEnabled: true
       MessageRetentionPeriod: 1209600
   CompletionQueue:
     Type: AWS::SQS::Queue
+    Condition: UseTextract
     Properties:
       SqsManagedSseEnabled: true
       VisibilityTimeout: 300
@@ -71,6 +94,7 @@ Resources:
         maxReceiveCount: 5
   QueuePolicy:
     Type: AWS::SQS::QueuePolicy
+    Condition: UseTextract
     Properties:
       Queues: [!Ref CompletionQueue]
       PolicyDocument:
@@ -83,12 +107,14 @@ Resources:
             Condition: {ArnEquals: {'aws:SourceArn': !Ref CompletionTopic}}
   Subscription:
     Type: AWS::SNS::Subscription
+    Condition: UseTextract
     Properties:
       TopicArn: !Ref CompletionTopic
       Protocol: sqs
       Endpoint: !GetAtt CompletionQueue.Arn
   TextractRole:
     Type: AWS::IAM::Role
+    Condition: UseTextract
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -132,22 +158,30 @@ Resources:
               - Effect: Allow
                 Action: s3:ListBucket
                 Resource: !GetAtt Documents.Arn
-              - Effect: Allow
-                Action: [textract:StartDocumentTextDetection, textract:GetDocumentTextDetection]
-                Resource: '*'
-              - Effect: Allow
-                Action: iam:PassRole
-                Resource: !GetAtt TextractRole.Arn
-                Condition: {StringEquals: {'iam:PassedToService': textract.amazonaws.com}}
-              - Effect: Allow
-                Action: [sqs:ReceiveMessage, sqs:DeleteMessage, sqs:GetQueueAttributes]
-                Resource: !GetAtt CompletionQueue.Arn
+              - !If
+                - UseTextract
+                - Effect: Allow
+                  Action: [textract:StartDocumentTextDetection, textract:GetDocumentTextDetection]
+                  Resource: '*'
+                - !Ref AWS::NoValue
+              - !If
+                - UseTextract
+                - Effect: Allow
+                  Action: iam:PassRole
+                  Resource: !GetAtt TextractRole.Arn
+                  Condition: {StringEquals: {'iam:PassedToService': textract.amazonaws.com}}
+                - !Ref AWS::NoValue
+              - !If
+                - UseTextract
+                - Effect: Allow
+                  Action: [sqs:ReceiveMessage, sqs:DeleteMessage, sqs:GetQueueAttributes]
+                  Resource: !GetAtt CompletionQueue.Arn
+                - !Ref AWS::NoValue
               - Effect: Allow
                 Action: bedrock:InvokeModel
                 Resource:
-                  - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/us.amazon.nova-lite-v1:0'
-                  - !Sub 'arn:${AWS::Partition}:bedrock:*::foundation-model/amazon.nova-lite-v1:0'
-                  - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v2:0'
+                  - !Sub 'arn:${AWS::Partition}:bedrock:${BedrockRegion}::foundation-model/amazon.nova-lite-v1:0'
+                  - !Sub 'arn:${AWS::Partition}:bedrock:${BedrockRegion}::foundation-model/amazon.titan-embed-text-v2:0'
               - Effect: Allow
                 Action: ses:SendEmail
                 Resource: !Sub 'arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:identity/${SenderEmail}'
@@ -156,6 +190,9 @@ Resources:
               - Effect: Allow
                 Action: [logs:CreateLogStream, logs:PutLogEvents]
                 Resource: !GetAtt ApplicationLogs.Arn
+              - Effect: Allow
+                Action: cloudformation:SignalResource
+                Resource: !Ref AWS::StackId
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties: {Roles: [!Ref InstanceRole]}
@@ -169,9 +206,11 @@ Resources:
           CidrIp: 0.0.0.0/0
   Host:
     Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal: {Timeout: PT30M}
     Properties:
       ImageId: !Ref ImageId
-      InstanceType: t3.medium
+      InstanceType: !Ref InstanceType
       CreditSpecification: {CPUCredits: standard}
       IamInstanceProfile: !Ref InstanceProfile
       MetadataOptions: {HttpTokens: required, HttpPutResponseHopLimit: 2}
@@ -185,12 +224,43 @@ Resources:
           Ebs: {VolumeSize: 30, VolumeType: gp3, Encrypted: true, DeleteOnTermination: false}
       Tags: [{Key: Name, Value: VendorOps-PoC}]
       UserData:
-        Fn::Base64: |
-          #!/bin/bash
-          set -eu
-          dnf install -y docker git
-          systemctl enable --now docker
-          mkdir -p /opt/vendorops
+        Fn::Base64: !Sub
+          - |
+              #!/bin/bash
+              set -eu
+              dnf install -y docker git aws-cfn-bootstrap
+              trap '/opt/aws/bin/cfn-signal -e $? --stack "${AWS::StackName}" --resource Host --region "${AWS::Region}"' EXIT
+              systemctl enable --now docker
+              git clone --no-checkout https://github.com/surajnair17/vendorops-ai.git /opt/vendorops
+              cd /opt/vendorops
+              git checkout --detach '${ReleaseCommit}'
+              umask 077
+              cat > backend/.env <<'CONFIG'
+              VENDOROPS_PROVIDER=fixture
+              VENDOROPS_LIVE_CALLS_ENABLED=false
+              VENDOROPS_LIVE_SEND_ENABLED=false
+              VENDOROPS_APPROVED_MONTHLY_BUDGET_USD=${MonthlyBudgetUSD}
+              VENDOROPS_AWS_REGION=${AWS::Region}
+              VENDOROPS_BEDROCK_REGION=${BedrockRegion}
+              VENDOROPS_MODEL_ID=amazon.nova-lite-v1:0
+              VENDOROPS_OCR_PROVIDER=${OcrProvider}
+              VENDOROPS_STORAGE_MODE=local
+              VENDOROPS_RECIPIENT_ALLOWLIST=${TestRecipientEmail}
+              VENDOROPS_SES_SENDER=${SenderEmail}
+              VENDOROPS_S3_BUCKET=${Documents}
+              VENDOROPS_SNS_TOPIC_ARN=${OptionalTopic}
+              VENDOROPS_TEXTRACT_ROLE_ARN=${OptionalRole}
+              VENDOROPS_SQS_QUEUE_URL=${OptionalQueue}
+              VENDOROPS_LOG_GROUP=${ApplicationLogs}
+              VENDOROPS_DAILY_MODEL_CALLS=20
+              VENDOROPS_DAILY_OCR_JOBS=2
+              VENDOROPS_DAILY_EMAIL_SENDS=2
+              CONFIG
+              bash backend/infra/bootstrap.sh
+          - OcrProvider: !If [UseTextract, textract, local]
+            OptionalTopic: !If [UseTextract, !Ref CompletionTopic, '']
+            OptionalRole: !If [UseTextract, !GetAtt TextractRole.Arn, '']
+            OptionalQueue: !If [UseTextract, !Ref CompletionQueue, '']
   Budget:
     Type: AWS::Budgets::Budget
     Properties:
@@ -199,6 +269,7 @@ Resources:
         BudgetType: COST
         TimeUnit: MONTHLY
         BudgetLimit: {Amount: !Ref MonthlyBudgetUSD, Unit: USD}
+        CostTypes: {IncludeCredit: false, IncludeRefund: false}
       NotificationsWithSubscribers:
         - Notification:
             NotificationType: ACTUAL
@@ -208,6 +279,7 @@ Resources:
           Subscribers: [{SubscriptionType: EMAIL, Address: !Ref BudgetEmail}]
   QueueAlarm:
     Type: AWS::CloudWatch::Alarm
+    Condition: UseTextract
     Properties:
       AlarmDescription: OCR completion backlog needs inspection.
       Namespace: AWS/SQS
@@ -222,7 +294,8 @@ Resources:
 Outputs:
   InstanceId: {Value: !Ref Host}
   DocumentBucket: {Value: !Ref Documents}
-  TopicArn: {Value: !Ref CompletionTopic}
-  TextractRoleArn: {Value: !GetAtt TextractRole.Arn}
-  QueueUrl: {Value: !Ref CompletionQueue}
+  TopicArn: {Condition: UseTextract, Value: !Ref CompletionTopic}
+  TextractRoleArn: {Condition: UseTextract, Value: !GetAtt TextractRole.Arn}
+  QueueUrl: {Condition: UseTextract, Value: !Ref CompletionQueue}
   LogGroup: {Value: !Ref ApplicationLogs}
+  DeployedCommit: {Value: !Ref ReleaseCommit}

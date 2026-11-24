@@ -4,6 +4,7 @@ import argparse
 import logging
 import time
 
+from backend.services.local_ocr import process_local_ocr_once
 from backend.services.ocr import poll_ocr_once, start_ocr_once
 from backend.services.workflow import process_email_once
 
@@ -16,6 +17,7 @@ def main():
     while True:
         try:
             processed = process_email_once()
+            processed = process_local_ocr_once() or processed
             processed = start_ocr_once() or processed
             processed = poll_ocr_once() or processed
         except Exception as error:
