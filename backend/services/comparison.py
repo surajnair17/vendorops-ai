@@ -1,5 +1,5 @@
 import re
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_UP, Decimal, localcontext
 
 from backend import db
 from backend.errors import AppError
@@ -72,9 +72,31 @@ def match_candidates(connection, identifier: str) -> dict:
 def compare(
     invoice: BusinessDocument, order: BusinessDocument, mapping: dict[int, int] | None = None
 ) -> list[dict]:
+    # Two 18-digit inputs can have a 36-digit product. Avoid default-context rounding.
+    with localcontext() as context:
+        context.prec = 50
+        return _compare(invoice, order, mapping)
+
+
+def _compare(
+    invoice: BusinessDocument, order: BusinessDocument, mapping: dict[int, int] | None
+) -> list[dict]:
     findings = []
 
     def add(kind, field, expected=None, actual=None, evidence=None):
+        if evidence is None:
+            parts = field.split(".")
+            evidence = {}
+            for owner, document in (("invoice", invoice), ("purchase_order", order)):
+                if parts[0] in {"invoice", "purchase_order"} and parts[0] != owner:
+                    continue
+                path = parts[1:] if parts[0] in {"invoice", "purchase_order"} else parts
+                if path[0] == "items" and len(path) > 1 and path[1].isdigit():
+                    index = int(path[1])
+                    if index < len(document.items):
+                        evidence[owner] = [e.model_dump() for e in document.items[index].evidence]
+                elif path[0] in document.evidence:
+                    evidence[owner] = [document.evidence[path[0]].model_dump()]
         difference = (
             actual - expected
             if isinstance(actual, Decimal) and isinstance(expected, Decimal)

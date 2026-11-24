@@ -69,6 +69,16 @@ def test_citation_requires_source_support():
     assert "Unsupported source citation" in result["issues"]
 
 
+def test_failed_extraction_attempt_is_persisted(client):
+    identifier = client.post(
+        "/api/v1/documents", files={"file": ("unknown.pdf", make_pdf("Unknown"))}
+    ).json()["id"]
+    assert client.post(f"/api/v1/documents/{identifier}/structure").status_code == 422
+    detail = client.get(f"/api/v1/documents/{identifier}").json()
+    assert detail["extraction_attempts"][0]["data"]["error_code"] == "fixture_unavailable"
+    assert not detail["revisions"]
+
+
 def test_document_revision_and_stale_correction(client):
     example = examples()[0]
     uploaded = client.post(

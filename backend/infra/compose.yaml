@@ -1,0 +1,57 @@
+services:
+  backend:
+    build:
+      context: ../..
+      dockerfile: backend/Dockerfile
+    env_file: ../.env
+    environment:
+      VENDOROPS_DATA_DIR: /data
+      VENDOROPS_CHROMA_HOST: chroma
+    volumes:
+      - app-data:/data
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - chroma
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  frontend:
+    build:
+      context: ../..
+      dockerfile: frontend/Dockerfile
+    command: [python, -m, streamlit, run, frontend/app.py, --server.address, 0.0.0.0, --server.headless, "true", --browser.gatherUsageStats, "false"]
+    environment:
+      VENDOROPS_BACKEND_URL: http://backend:8000
+    ports:
+      - "127.0.0.1:8501:8501"
+    depends_on:
+      - backend
+    restart: unless-stopped
+  worker:
+    build:
+      context: ../..
+      dockerfile: backend/Dockerfile
+    command: [python, -m, backend.worker]
+    env_file: ../.env
+    environment:
+      VENDOROPS_DATA_DIR: /data
+    volumes:
+      - app-data:/data
+    restart: unless-stopped
+  chroma:
+    build:
+      context: ../..
+      dockerfile: backend/Dockerfile
+    command: [chroma, run, --host, 0.0.0.0, --port, "8000", --path, /data/chroma]
+    environment:
+      ANONYMIZED_TELEMETRY: "FALSE"
+    volumes:
+      - vector-data:/data
+    restart: unless-stopped
+volumes:
+  app-data:
+  vector-data:

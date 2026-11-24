@@ -1,102 +1,109 @@
-# VendorOps AI
+﻿# VendorOps AI
 
-A learning-first vendor document intelligence project for a single-company portfolio demo.
-Build and verify one milestone before proceeding to the next. Use synthetic documents only.
+A single-company portfolio application for vendor document review, built as a guided learning project.
+Use synthetic documents. Live AWS calls and real email sending are **disabled by default**.
 
-## Current milestone: PDF text extraction
+## Project layout
 
-FastAPI accepts a digital PDF, validates its contents, and uses PyMuPDF to extract text.
-Streamlit sends the file over HTTP and displays the result. This endpoint does not retain uploads.
-Scanned and blank PDFs return `no_text`; they do not trigger OCR or a paid service.
+```text
+backend/
+  routes/ services/ schemas/  FastAPI and business logic
+  migrations/                SQLite schema migrations
+  tests/                     Backend and workflow tests
+  scripts/                   Samples, evaluation, demo, backup, smoke checks
+  docs/                      Learning, architecture, operations, verification
+  infra/                     Compose and CloudFormation
+  requirements*.txt          Backend and optional cloud dependencies
+  .env.example               Backend configuration
+  Dockerfile                 Backend/worker container
+frontend/
+  app.py client.py workspace.py
+  tests/                     Streamlit tests
+  requirements*.txt          Frontend dependencies
+  .env.example               HTTP connection settings
+  Dockerfile                 Frontend container
+```
 
-## Setup on Windows / PowerShell
+Shared Git/CI metadata, this README, and lint/test configuration stay at the root.
+Generated data and artifacts live inside backend/ and are ignored by Git.
+The local shared .venv is a development tool, not application source.
 
-Python 3.13 is the tested interpreter. Run commands from the repository root.
+## Run locally
+
+Python 3.13 is tested. Run commands **from the repository root**:
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-Copy-Item .env.example .env
+.\.venv\Scripts\python.exe -m pip install -r backend/requirements-dev.txt -r backend/requirements-cloud.txt -r frontend/requirements-dev.txt
+Copy-Item backend/.env.example backend/.env
+Copy-Item frontend/.env.example frontend/.env
 ```
 
-Optional activation: `.\.venv\Scripts\Activate.ps1`. Activation changes which Python the
-terminal finds; it does not install anything. The explicit interpreter commands below also work
-without activation or an execution-policy change. Pip installs dependencies into this environment.
-
-Start the backend in one terminal:
+Start each process in a separate terminal:
 
 ```powershell
 .\.venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
-```
-
-Start the frontend in another terminal:
-
-```powershell
 .\.venv\Scripts\python.exe -m streamlit run frontend/app.py --server.address 127.0.0.1
+.\.venv\Scripts\python.exe -m backend.worker
 ```
 
 Open http://localhost:8501. API documentation: http://127.0.0.1:8000/docs.
+Activation is optional: explicit interpreter paths avoid PowerShell execution-policy changes.
+
+Generate examples and create an **unapproved** demonstration draft:
+
+```powershell
+.\.venv\Scripts\python.exe -m backend.scripts.generate_samples
+.\.venv\Scripts\python.exe -m backend.scripts.demo
+```
+
+Samples are in backend/artifacts/samples. Use Documents, Compare, Policies, and Actions in
+Streamlit. The demo never approves or sends email. Review, approval, and execution are separate.
+
+## Verify
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
 .\.venv\Scripts\python.exe -m ruff check .
+.\.venv\Scripts\python.exe -m backend.scripts.smoke
+.\.venv\Scripts\python.exe -m backend.scripts.evaluate
+.\.venv\Scripts\python.exe -m backend.scripts.evaluate_retrieval
+```
+
+The smoke test uses temporary servers and a separate database. Fixture evaluation scores verify
+known responses and deterministic logic; they do not establish real model accuracy.
+
+## Capability and limits
+
+Implemented locally: PDF extraction, exact synthetic extraction fixtures, revisioned corrections,
+matching, decimal comparisons, Chroma retrieval, confirmed rules, approval-bound drafts,
+durable simulated delivery, audit history, backup/restore, and an evaluation harness.
+
+Prepared for live verification: Bedrock, Titan, S3, asynchronous Textract/SNS/SQS, SES, EC2, and
+CloudWatch. Deployment, live OCR/model accuracy, inbox delivery, and cloud costs are not claimed
+as verified. Read [verification status](backend/docs/status.md) and
+[operations](backend/docs/operations.md).
+The [demo guide](backend/docs/demo.md) and [evaluation guide](backend/docs/evaluation.md) explain
+the complete local walkthrough and the separate live verification gates.
+
+## Compatible Phase 1 API
+
+```powershell
 curl.exe -F "file=@invoice.pdf" http://127.0.0.1:8000/api/v1/documents/extract
 ```
 
-Example response (text depends on the PDF):
-
 ```json
-{
-  "filename": "invoice.pdf",
-  "page_count": 1,
-  "extracted_text": "Invoice INV-001",
-  "character_count": 15,
-  "extraction_status": "success",
-  "message": "Text extracted successfully."
-}
+{"filename":"invoice.pdf","page_count":1,"extracted_text":"Invoice INV-001","character_count":15,"extraction_status":"success","message":"Text extracted successfully."}
 ```
 
-The default file-size limit is **10 MiB = 10,485,760 bytes**. Configure
-`VENDOROPS_MAX_UPLOAD_BYTES` in `.env`. The backend validates actual content; changing a filename
-to `.pdf` does not make it a PDF. Errors have the shape
-`{"error":{"code":"empty_upload","message":"The uploaded file is empty."}}`.
-Missing input returns 422, empty/corrupt PDFs 400, unsupported files 415, oversized files 413,
-password-protected PDFs 422, and unexpected failures a generic 500.
+This endpoint retains no uploads. The default limit is 10 MiB (10,485,760 bytes).
+Blank/scanned PDFs return no_text. Persistent review uses POST /api/v1/documents.
 
-## How a PDF travels through the code
+## Learn the code
 
-1. Streamlit collects bytes from the browser and sends a multipart HTTP POST request.
-2. FastAPI routes that request to `backend/routes/documents.py`.
-3. `read_pdf_upload` reads at most the limit plus one byte, validates the extension, and closes
-   the uploaded file. Temporary framework spool files are not retained.
-4. `extract_pages` opens the actual bytes with PyMuPDF and reads every page.
-5. `extract_pdf` constructs a Pydantic response. Page boundaries use a form-feed separator.
-6. FastAPI serializes the response to JSON. Streamlit displays the response over HTTP.
+Follow [the workbook](backend/docs/learning.md) and [roadmap](backend/docs/roadmap.md). Trace:
 
-An HTTP POST sends input to a server for processing. Pydantic defines the shape of data at the
-boundary. PyMuPDF reads PDF text; it does not interpret invoice semantics. OCR reads images, and an
-LLM interprets text; neither is needed to read an existing digital text layer.
+User → Streamlit → HTTP POST → FastAPI → PyMuPDF → Pydantic response → JSON → Streamlit.
 
-## Roadmap and learning
-
-| Phase | Outcome | Main lesson |
-|---|---|---|
-| 0 | Environment, Git, repeatable setup | Interpreters and dependencies |
-| 1 | PDF extraction | HTTP, validation, exceptions, tests |
-| 2 | Structured records and corrections | Schemas, persistence, model boundaries |
-| 3 | Matching and discrepancy reports | Decimal arithmetic and deterministic logic |
-| 4 | Policy evidence and confirmed rules | Retrieval versus decision making |
-| 5 | Review, approval, simulated email | State machines and idempotency |
-| 6 | AWS, OCR, approved SES delivery | IAM, jobs, costs, recovery |
-| 7 | Evaluation and guided PoC | Honest measurement and communication |
-
-Read [the learning workbook](docs/learning.md). Each phase requires test evidence and your own
-teach-back before it counts as a completed learning milestone. AWS spending and real email
-delivery remain disabled until their separate configuration and approval requirements are met.
-
-## Limitations
-
-Text extraction order can differ from visual layout, especially in complex tables. An empty
-text layer is only a signal that OCR may help, not proof of a scanned document. The application
-is for a private, single-operator synthetic demonstration, not public untrusted uploads or real
-customer data. File size limits alone do not bound PDF decompression or processing complexity.
+PyMuPDF reads text, OCR reads images, an LLM interprets text, retrieval finds policies, and Python
+calculates differences. Learner exercises and teach-back remain for you to complete.

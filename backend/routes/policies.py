@@ -9,8 +9,16 @@ from backend import db
 from backend.config import settings
 from backend.errors import AppError
 from backend.routes.documents import read_pdf_upload
+from backend.services.comparison import report_is_stale
 from backend.services.pdf_extractor import extract_pages
-from backend.services.policies import assess, chunks_for, index_policy
+from backend.services.policies import (
+    assess,
+    assessment_query,
+    chunks_for,
+    embedding,
+    index_policy,
+    policy_signature,
+)
 
 router = APIRouter(prefix="/api/v1", tags=["policies"])
 
@@ -61,16 +69,22 @@ async def upload_pdf_policy(file: UploadFile, name: str, policy_version: str, ef
     pages = extract_pages(content)
     from starlette.concurrency import run_in_threadpool
 
-    return await run_in_threadpool(
-        save_policy,
-        PolicyInput(
+    try:
+        payload = PolicyInput(
             name=name,
             policy_version=policy_version,
             effective_date=effective_date,
             text="\n".join(pages),
-        ),
-        pages,
-    )
+        )
+        if not payload.text.strip():
+            raise ValueError("No policy text")
+    except ValueError as error:
+        raise AppError(
+            422,
+            "invalid_policy_text",
+            "Use a digital PDF with policy text of at most 100,000 characters.",
+        ) from error
+    return await run_in_threadpool(save_policy, payload, pages)
 
 
 @router.get("/policies")
@@ -115,10 +129,13 @@ class RuleInput(BaseModel):
         "invoice_value_threshold",
     ]
     value: str
+    currency: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
 
 
 @router.post("/rules", status_code=201)
 def create_rule(payload: RuleInput):
+    if payload.rule_type == "invoice_value_threshold" and payload.currency is None:
+        raise AppError(422, "currency_required", "An invoice-value threshold needs a currency.")
     if payload.rule_type == "required_field":
         if payload.value not in {
             "supplier",
@@ -138,6 +155,8 @@ def create_rule(payload: RuleInput):
             raise AppError(
                 422, "invalid_threshold", "Use a nonnegative finite threshold."
             ) from error
+        # Canonical values keep equivalent thresholds (10 and 10.0) from conflicting.
+        payload.value = format(number.normalize(), "f")
     with db.transaction() as connection:
         policy = db.get(connection, payload.policy_id, "policy")
         if payload.chunk_id not in {c["id"] for c in policy["data"]["chunks"]}:
@@ -165,8 +184,29 @@ def confirm_rule(identifier: str, payload: Activation):
 @router.post("/comparisons/{identifier}/policy-assessments", status_code=201)
 def create_assessment(identifier: str):
     with db.transaction() as connection:
+        report = db.get(connection, identifier, "comparison")
+        signature = policy_signature(connection)
+        if report_is_stale(connection, report):
+            raise AppError(409, "stale_report", "Recompare the current document revisions first.")
+    # A paid embedding reservation must commit even if a later assessment fails.
+    # Do not hold the SQLite write transaction across the provider call.
+    vector = embedding(assessment_query(report)) if signature else []
+    with db.transaction() as connection:
+        if policy_signature(connection) != signature:
+            raise AppError(409, "stale_policy", "Policies changed during retrieval. Try again.")
         return db.create(
             connection,
             "assessment",
-            assess(connection, db.get(connection, identifier, "comparison")),
+            assess(connection, db.get(connection, identifier, "comparison"), query_vector=vector),
         )
+
+
+@router.get("/comparisons/{identifier}/policy-assessments")
+def list_assessments(identifier: str):
+    with db.transaction() as connection:
+        db.get(connection, identifier, "comparison")
+        return [
+            a
+            for a in db.all_records(connection, "assessment")
+            if a["data"]["comparison_id"] == identifier
+        ]

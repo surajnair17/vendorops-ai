@@ -26,11 +26,11 @@ def chunks_for(pages: list[str]) -> list[dict]:
     return chunks
 
 
-def embedding(text: str) -> list[float]:
+def embedding(text: str, connection=None) -> list[float]:
     if settings.provider == "bedrock":
         from backend.services.cloud import embed_text
 
-        return embed_text(text)
+        return embed_text(text, connection)
     # A deliberately simple lexical fixture. Not a semantic embedding or accuracy claim.
     vector = [0.0] * 64
     for token in re.findall(r"[a-z0-9]+", text.casefold()):
@@ -42,8 +42,14 @@ def embedding(text: str) -> list[float]:
 
 def collection():
     import chromadb
+    from chromadb.config import Settings as ChromaSettings
 
-    client = chromadb.PersistentClient(path=str(settings.data_dir / "vectors"))
+    options = ChromaSettings(anonymized_telemetry=False)
+    client = (
+        chromadb.HttpClient(host=settings.chroma_host, port=settings.chroma_port, settings=options)
+        if settings.chroma_host
+        else chromadb.PersistentClient(path=str(settings.data_dir / "vectors"), settings=options)
+    )
     return client.get_or_create_collection(
         f"policies-{settings.provider}-v1",
         embedding_function=None,
@@ -51,11 +57,12 @@ def collection():
     )
 
 
-def index_policy(policy: dict):
+def index_policy(policy: dict, vector_store=None):
     chunks = policy["data"]["chunks"]
     if not chunks:
         raise AppError(422, "empty_policy", "Policy has no text to index.")
-    collection().upsert(
+    store = vector_store if vector_store is not None else collection()
+    store.upsert(
         ids=[f"{policy['id']}:{chunk['id']}" for chunk in chunks],
         documents=[chunk["text"] for chunk in chunks],
         embeddings=[embedding(chunk["text"]) for chunk in chunks],
@@ -74,12 +81,21 @@ def policy_signature(connection) -> list[dict]:
     ]
 
 
-def retrieve(connection, query: str) -> list[dict]:
+def retrieve(connection, query: str, vector_store=None, query_vector=None) -> list[dict]:
     active = policy_signature(connection)
     if not active:
         return []
-    result = collection().query(
-        query_embeddings=[embedding(query)],
+    if any(
+        not db.get(connection, p["id"])["data"].get("indexed")
+        or db.get(connection, p["id"])["data"].get("index_provider") != settings.provider
+        for p in active
+    ):
+        raise AppError(409, "reindex_required", "Reindex active policies for the current provider.")
+    store = vector_store if vector_store is not None else collection()
+    result = store.query(
+        query_embeddings=[
+            query_vector if query_vector is not None else embedding(query, connection)
+        ],
         n_results=5,
         where={"policy_id": {"$in": [p["id"] for p in active]}},
     )
@@ -107,14 +123,17 @@ def retrieve(connection, query: str) -> list[dict]:
     return passages
 
 
-def assess(connection, report: dict) -> dict:
+def assessment_query(report: dict) -> str:
+    return "invoice purchasing policy " + " ".join(
+        finding["type"].replace("_", " ") for finding in report["data"]["findings"]
+    )
+
+
+def assess(connection, report: dict, query_vector=None) -> dict:
     if report_is_stale(connection, report):
         raise AppError(409, "stale_report", "Recompare the current document revisions first.")
     _, _, invoice = current_business(connection, report["data"]["invoice_id"])
-    query = "invoice purchasing policy " + " ".join(
-        f["type"].replace("_", " ") for f in report["data"]["findings"]
-    )
-    evidence = retrieve(connection, query)
+    evidence = retrieve(connection, assessment_query(report), query_vector=query_vector)
     active_ids = {p["id"] for p in policy_signature(connection)}
     rules = [
         r
@@ -158,12 +177,24 @@ def assess(connection, report: dict) -> dict:
                 }
             )
         if data["rule_type"] == "invoice_value_threshold":
+            thresholds = {
+                r["data"]["value"]
+                for r in rules
+                if r["data"]["rule_type"] == "invoice_value_threshold"
+                and r["data"].get("currency") == data.get("currency")
+            }
             outcomes.append(
                 {
                     "rule_ids": [rule["id"]],
-                    "classification": "escalate"
-                    if invoice.total is None or invoice.total > Decimal(data["value"])
-                    else "below_threshold",
+                    "classification": (
+                        "manual_review"
+                        if len(thresholds) != 1
+                        or not data.get("currency")
+                        or invoice.currency != data["currency"]
+                        else "escalate"
+                        if invoice.total is None or invoice.total > Decimal(data["value"])
+                        else "below_threshold"
+                    ),
                 }
             )
     # Include every applied rule's citation, even if it was outside vector top-k.

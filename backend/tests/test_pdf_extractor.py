@@ -71,7 +71,7 @@ def test_missing_upload_and_health(client):
     assert client.get("/health").json() == {"status": "ok"}
 
 
-def test_unexpected_error_hides_details(client, monkeypatch):
+def test_unexpected_error_hides_details(client, monkeypatch, caplog):
     def broken(*args):
         raise Exception("secret document content")
 
@@ -81,3 +81,4 @@ def test_unexpected_error_hides_details(client, monkeypatch):
     )
     assert response.status_code == 500
     assert "secret" not in response.text
+    assert "secret document content" not in caplog.text

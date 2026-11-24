@@ -30,10 +30,12 @@ def engine_for(directory: str):
     )
     with engine.connect() as connection:
         connection.exec_driver_sql("PRAGMA journal_mode=WAL")
+        connection.commit()
+        # API and worker can start together. Serialize migration checks across processes.
+        connection.exec_driver_sql("BEGIN IMMEDIATE")
         connection.exec_driver_sql(
             "CREATE TABLE IF NOT EXISTS schema_versions (version INTEGER PRIMARY KEY)"
         )
-        connection.commit()
         for migration in sorted((Path(__file__).parent / "migrations").glob("*.sql")):
             version = int(migration.name.split("_")[0])
             if connection.execute(
@@ -44,7 +46,7 @@ def engine_for(directory: str):
                 if statement.strip():
                     connection.exec_driver_sql(statement)
             connection.execute(text("INSERT INTO schema_versions VALUES (:v)"), {"v": version})
-            connection.commit()
+        connection.commit()
     return engine
 
 

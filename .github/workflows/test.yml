@@ -1,0 +1,32 @@
+name: Offline tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      VENDOROPS_LIVE_CALLS_ENABLED: 'false'
+      VENDOROPS_LIVE_SEND_ENABLED: 'false'
+      AWS_EC2_METADATA_DISABLED: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - run: pip install -r backend/requirements-dev.txt -r backend/requirements-cloud.txt -r frontend/requirements-dev.txt
+      - run: python -m ruff check .
+      - run: python -m pytest -q
+      - run: python -m backend.scripts.smoke
+      - run: python -m backend.scripts.generate_samples
+      - run: python -m backend.scripts.evaluate
+      - run: python -m backend.scripts.evaluate_retrieval
+  infrastructure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - run: pip install -r backend/infra/requirements.txt
+      - run: cfn-lint backend/infra/cloudformation.yaml
+      - run: cp backend/.env.example backend/.env
+      - run: docker compose -f backend/infra/compose.yaml config --quiet

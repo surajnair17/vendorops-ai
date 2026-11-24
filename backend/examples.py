@@ -46,6 +46,13 @@ def examples() -> list[dict]:
                 "evidence": {
                     "document_number": {"page": 1, "quote": number},
                     "supplier": {"page": 1, "quote": "Example Supplies"},
+                    "po_number": {"page": 1, "quote": f"PO-{index + 1:03}"},
+                    "currency": {"page": 1, "quote": "USD"},
+                    "total": {"page": 1, "quote": f"Total: {total}"},
+                    "subtotal": {"page": 1, "quote": f"Subtotal: {total}"},
+                    "discount": {"page": 1, "quote": "Discount: 0"},
+                    "tax": {"page": 1, "quote": "Tax: 0"},
+                    "freight": {"page": 1, "quote": "Freight: 0"},
                 },
             }
             result.append({"text": text, "data": data, "split": "test" if index >= 15 else "dev"})

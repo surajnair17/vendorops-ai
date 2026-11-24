@@ -1,0 +1,15 @@
+services:
+  backend:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${VENDOROPS_AWS_REGION:-us-east-1}
+        awslogs-group: ${VENDOROPS_LOG_GROUP:?Set the stack LogGroup output}
+        awslogs-stream: backend
+  worker:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${VENDOROPS_AWS_REGION:-us-east-1}
+        awslogs-group: ${VENDOROPS_LOG_GROUP:?Set the stack LogGroup output}
+        awslogs-stream: worker

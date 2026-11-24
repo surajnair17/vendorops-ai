@@ -2,13 +2,12 @@ from copy import deepcopy
 from decimal import Decimal
 
 import pytest
-
 from conftest import make_pdf
 
+from backend.errors import AppError
 from backend.examples import examples
 from backend.schemas.business import BusinessDocument
 from backend.services.comparison import compare
-from backend.errors import AppError
 
 
 def test_price_difference_is_decimal_and_evidenced():
@@ -83,5 +82,8 @@ def test_duplicate_purchase_orders_abstain(client):
     upload_structured(client, 0)
     upload_structured(client, 0)
     invoice = upload_structured(client, 1)
-    assert client.get(f"/api/v1/documents/{invoice}/match-candidates").json()["automatic_match"] is None
+    assert (
+        client.get(f"/api/v1/documents/{invoice}/match-candidates").json()["automatic_match"]
+        is None
+    )
     assert client.post("/api/v1/comparisons", json={"invoice_id": invoice}).status_code == 409

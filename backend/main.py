@@ -1,23 +1,50 @@
+import json
 import logging
+from time import perf_counter
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from backend.errors import AppError
+from backend.routes.actions import router as actions_router
 from backend.routes.comparisons import router as comparisons_router
 from backend.routes.documents import router
+from backend.routes.operations import router as operations_router
 from backend.routes.policies import router as policies_router
-from backend.routes.actions import router as actions_router
 from backend.routes.records import router as records_router
 
 logger = logging.getLogger("vendorops")
-app = FastAPI(title="VendorOps AI", version="0.1.0")
+logger.setLevel(logging.INFO)
+app = FastAPI(title="VendorOps AI", version="0.2.0")
 app.include_router(router)
 app.include_router(records_router)
 app.include_router(comparisons_router)
 app.include_router(policies_router)
 app.include_router(actions_router)
+app.include_router(operations_router)
+
+
+@app.middleware("http")
+async def request_metrics(request: Request, call_next):
+    started = perf_counter()
+    try:
+        response = await call_next(request)
+    except Exception as error:
+        # Handle here so the ASGI server doesn't also log an exception message with source text.
+        response = await unexpected_error(request, error)
+    route = request.scope.get("route")
+    logger.info(
+        json.dumps(
+            {
+                "event": "request",
+                "route": getattr(route, "path", "unmatched"),
+                "status": response.status_code,
+                "duration_ms": round((perf_counter() - started) * 1000, 2),
+            }
+        )
+    )
+    return response
 
 
 @app.exception_handler(AppError)

@@ -9,7 +9,7 @@ Number = Annotated[Decimal, Field(ge=0, allow_inf_nan=False, max_digits=18, deci
 
 class Evidence(BaseModel):
     page: int = Field(ge=1)
-    quote: str
+    quote: str = Field(min_length=1)
 
 
 class LineItem(BaseModel):
@@ -22,7 +22,7 @@ class LineItem(BaseModel):
     discount: Number | None = None
     tax: Number | None = None
     total: Number | None = None
-    evidence: list[Evidence] = []
+    evidence: list[Evidence] = Field(default_factory=list)
 
 
 class BusinessDocument(BaseModel):
@@ -33,20 +33,20 @@ class BusinessDocument(BaseModel):
     document_date: date | None = None
     po_number: str | None = None
     currency: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
-    items: list[LineItem] = []
+    items: list[LineItem] = Field(default_factory=list)
     subtotal: Number | None = None
     discount: Number | None = None
     tax: Number | None = None
     freight: Number | None = None
     total: Number | None = None
-    evidence: dict[str, Evidence] = {}
+    evidence: dict[str, Evidence] = Field(default_factory=dict)
 
 
 def issues_for(document: BusinessDocument) -> list[str]:
     issues = [
         f"Missing {name}"
         for name in ("supplier", "document_number", "currency", "total")
-        if getattr(document, name) is None
+        if getattr(document, name) is None or getattr(document, name) == ""
     ]
     if not document.items:
         issues.append("No line items")
@@ -55,3 +55,24 @@ def issues_for(document: BusinessDocument) -> list[str]:
             if getattr(item, field) is None:
                 issues.append(f"Line {index + 1}: missing {field}")
     return issues
+
+
+def source_issues(document: BusinessDocument, pages: list[str]) -> list[str]:
+    """Check citation presence and exact quotes, without claiming semantic entailment."""
+    issues = []
+    for name in ("supplier", "document_number", "po_number", "currency", "total"):
+        if getattr(document, name) is not None and name not in document.evidence:
+            issues.append(f"Missing source citation for {name}")
+    for index, item in enumerate(document.items):
+        if not item.evidence:
+            issues.append(f"Line {index + 1}: missing source citation")
+    evidence = list(document.evidence.values())
+    evidence.extend(entry for item in document.items for entry in item.evidence)
+    for entry in evidence:
+        if (
+            not entry.quote.strip()
+            or entry.page > len(pages)
+            or entry.quote not in pages[entry.page - 1]
+        ):
+            issues.append("Unsupported source citation")
+    return list(dict.fromkeys(issues))

@@ -5,7 +5,7 @@ from pydantic import ValidationError
 from backend.config import settings
 from backend.errors import AppError
 from backend.examples import examples
-from backend.schemas.business import BusinessDocument, issues_for
+from backend.schemas.business import BusinessDocument, issues_for, source_issues
 
 
 class FixtureProvider:
@@ -36,16 +36,16 @@ def extract_structure(text: str, pages: list[str], provider=None) -> dict:
             provider = BedrockProvider()
         else:
             raise AppError(422, "invalid_provider", "Configure fixture or bedrock provider.")
+    provider_text = (
+        "\n\n".join(f"PAGE {i + 1}\n{page}" for i, page in enumerate(pages))
+        if provider.mode == "bedrock"
+        else text
+    )
     for attempt in range(2):
         try:
-            raw = provider.extract(text, repair=bool(attempt))
+            raw = provider.extract(provider_text, repair=bool(attempt))
             document = BusinessDocument.model_validate_json(raw)
-            issues = issues_for(document)
-            evidence = list(document.evidence.values())
-            evidence.extend(e for item in document.items for e in item.evidence)
-            for entry in evidence:
-                if entry.page > len(pages) or entry.quote not in pages[entry.page - 1]:
-                    issues.append("Unsupported source citation")
+            issues = issues_for(document) + source_issues(document, pages)
             return {
                 "structured": document.model_dump(mode="json"),
                 "issues": issues,

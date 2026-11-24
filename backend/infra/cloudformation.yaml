@@ -1,0 +1,228 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: VendorOps private single-operator PoC; no public inbound application access.
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  PublicSubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Existing subnet with Internet Gateway routing for outbound AWS and package access.
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+  SenderEmail:
+    Type: String
+    Description: SES verified sender in this region.
+  TestRecipientEmail:
+    Type: String
+    Description: SES verified test recipient; IAM also restricts sending to this address.
+  BudgetEmail:
+    Type: String
+  MonthlyBudgetUSD:
+    Type: Number
+    MinValue: 1
+    Description: Explicitly agreed budget; alerts do not cap charges.
+Resources:
+  Documents:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: {SSEAlgorithm: AES256}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration: {Status: Enabled}
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireOldVersions
+            Status: Enabled
+            NoncurrentVersionExpiration: {NoncurrentDays: 30}
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Documents
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource: [!GetAtt Documents.Arn, !Sub '${Documents.Arn}/*']
+            Condition: {Bool: {'aws:SecureTransport': 'false'}}
+  CompletionTopic:
+    Type: AWS::SNS::Topic
+  DeadLetters:
+    Type: AWS::SQS::Queue
+    Properties:
+      SqsManagedSseEnabled: true
+      MessageRetentionPeriod: 1209600
+  CompletionQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      SqsManagedSseEnabled: true
+      VisibilityTimeout: 300
+      MessageRetentionPeriod: 1209600
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DeadLetters.Arn
+        maxReceiveCount: 5
+  QueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues: [!Ref CompletionQueue]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: sns.amazonaws.com}
+            Action: sqs:SendMessage
+            Resource: !GetAtt CompletionQueue.Arn
+            Condition: {ArnEquals: {'aws:SourceArn': !Ref CompletionTopic}}
+  Subscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref CompletionTopic
+      Protocol: sqs
+      Endpoint: !GetAtt CompletionQueue.Arn
+  TextractRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: textract.amazonaws.com}
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals: {'aws:SourceAccount': !Ref 'AWS::AccountId'}
+              ArnLike: {'aws:SourceArn': !Sub 'arn:${AWS::Partition}:textract:${AWS::Region}:${AWS::AccountId}:*'}
+      Policies:
+        - PolicyName: PublishCompletion
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: !Ref CompletionTopic
+  ApplicationLogs:
+    Type: AWS::Logs::LogGroup
+    Properties: {RetentionInDays: 14}
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: ec2.amazonaws.com}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: VendorOpsRuntime
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [s3:GetObject, s3:PutObject]
+                Resource: [!Sub '${Documents.Arn}/documents/*', !Sub '${Documents.Arn}/backups/*', !Sub '${Documents.Arn}/releases/*']
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt Documents.Arn
+              - Effect: Allow
+                Action: [textract:StartDocumentTextDetection, textract:GetDocumentTextDetection]
+                Resource: '*'
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: !GetAtt TextractRole.Arn
+                Condition: {StringEquals: {'iam:PassedToService': textract.amazonaws.com}}
+              - Effect: Allow
+                Action: [sqs:ReceiveMessage, sqs:DeleteMessage, sqs:GetQueueAttributes]
+                Resource: !GetAtt CompletionQueue.Arn
+              - Effect: Allow
+                Action: bedrock:InvokeModel
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/us.amazon.nova-lite-v1:0'
+                  - !Sub 'arn:${AWS::Partition}:bedrock:*::foundation-model/amazon.nova-lite-v1:0'
+                  - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v2:0'
+              - Effect: Allow
+                Action: ses:SendEmail
+                Resource: !Sub 'arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:identity/${SenderEmail}'
+                Condition:
+                  ForAllValues:StringEquals: {'ses:Recipients': [!Ref TestRecipientEmail]}
+              - Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !GetAtt ApplicationLogs.Arn
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties: {Roles: [!Ref InstanceRole]}
+  PrivateAccess:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: No inbound ports; use Session Manager port forwarding.
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+        - IpProtocol: '-1'
+          CidrIp: 0.0.0.0/0
+  Host:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageId
+      InstanceType: t3.medium
+      CreditSpecification: {CPUCredits: standard}
+      IamInstanceProfile: !Ref InstanceProfile
+      MetadataOptions: {HttpTokens: required, HttpPutResponseHopLimit: 2}
+      NetworkInterfaces:
+        - DeviceIndex: '0'
+          AssociatePublicIpAddress: true
+          SubnetId: !Ref PublicSubnetId
+          GroupSet: [!Ref PrivateAccess]
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs: {VolumeSize: 30, VolumeType: gp3, Encrypted: true, DeleteOnTermination: false}
+      Tags: [{Key: Name, Value: VendorOps-PoC}]
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          set -eu
+          dnf install -y docker git
+          systemctl enable --now docker
+          mkdir -p /opt/vendorops
+  Budget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: !Sub '${AWS::StackName}-monthly'
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit: {Amount: !Ref MonthlyBudgetUSD, Unit: USD}
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers: [{SubscriptionType: EMAIL, Address: !Ref BudgetEmail}]
+  QueueAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: OCR completion backlog needs inspection.
+      Namespace: AWS/SQS
+      MetricName: ApproximateAgeOfOldestMessage
+      Dimensions: [{Name: QueueName, Value: !GetAtt CompletionQueue.QueueName}]
+      Statistic: Maximum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 600
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+Outputs:
+  InstanceId: {Value: !Ref Host}
+  DocumentBucket: {Value: !Ref Documents}
+  TopicArn: {Value: !Ref CompletionTopic}
+  TextractRoleArn: {Value: !GetAtt TextractRole.Arn}
+  QueueUrl: {Value: !Ref CompletionQueue}
+  LogGroup: {Value: !Ref ApplicationLogs}

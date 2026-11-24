@@ -5,13 +5,21 @@ import httpx
 import streamlit as st
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 st.set_page_config(page_title="VendorOps AI", page_icon="📄", layout="wide")
 st.title("VendorOps AI")
-page = st.sidebar.radio("Workspace", ["PDF Text", "Documents", "Compare", "Policies", "Actions"])
+page = st.sidebar.radio(
+    "Workspace", ["PDF Text", "Documents", "Compare", "Policies", "Actions", "Operations"]
+)
+if page == "Operations":
+    from frontend.workspace import operations
+
+    operations()
+    st.stop()
 if page == "Actions":
     from frontend.workspace import actions
+
     actions()
     st.stop()
 if page == "Policies":
