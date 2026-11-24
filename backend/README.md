@@ -22,4 +22,3 @@ PostgreSQL before scaling to several application hosts.
 
 Read [architecture](docs/architecture.md), [operations](docs/operations.md), and
 [learning exercises](docs/learning.md).
-

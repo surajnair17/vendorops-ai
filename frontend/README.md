@@ -16,4 +16,3 @@ timeout. Dependencies and the Dockerfile are separate from the backend.
 app.py selects screens, client.py handles HTTP errors, and workspace.py implements review flows.
 Structured fields currently use validated JSON editing, a transparent learning interface that
 can later become a customer-friendly form.
-
