@@ -21,7 +21,7 @@ BOOTSTRAP = ROOT / "backend/infra/bootstrap.sh"
 
 class Deployment(BaseModel):
     model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
-    profile: str = "vendorops"
+    profile: str = "pixel-perfect"
     account_id: str = ""
     region: str = Field(default="us-east-1", pattern=r"^[a-z]{2}(?:-[a-z]+)+-\d$")
     bedrock_region: str = Field(default="us-east-1", pattern=r"^[a-z]{2}(?:-[a-z]+)+-\d$")
@@ -149,7 +149,7 @@ def check(config: Deployment, client_factory=None) -> dict:
                     "name": "login",
                     "status": "blocked",
                     "code": error_code(error),
-                    "next_step": "Run AWS CLI v2: aws login --profile vendorops, then retry.",
+                    "next_step": f"Run aws login --profile {config.profile}, then retry.",
                 }
             ],
         }

@@ -5,7 +5,7 @@
 - The user chose an AWS Free plan with local OCR. Tesseract is now integrated through the durable
   worker, with time/page/raster limits, provenance, stale-result protection, and restart recovery.
   The Windows engine was installed and a real scanned-PDF upload/job test passed.
-- The final 69-test suite passed including real local OCR and SDK request-shape checks for
+- The final 70-test suite passed including real local OCR and SDK request-shape checks for
   Converse, Titan, SES, and encrypted S3 upload. The real HTTP/Streamlit/simulated-worker smoke passed.
 - Five held-out synthetic scans completed local OCR with zero failures and zero character errors
   across 1,120 reference characters after whitespace normalization. This small result does not
@@ -18,11 +18,24 @@
   out a pinned public commit, starts containers, and signals CloudFormation readiness.
 - Free-plan infrastructure uses t3.small and omits Textract/SNS/SQS by default. Regional Nova Lite
   replaces the cross-region profile; project resource Region and Bedrock API Region are configurable.
-- AWS CLI v2.42.3 was extracted locally from a signature-verified Amazon installer. Browser login
-  was started and expired before authorization; no AWS profile was available at the readiness check. Login troubleshooting
-  is in progress; AWS's new signup uses Builder ID/project selection rather than the root form.
-- No AWS deployment, live model call, S3 upload, or real email has been performed. Account sign-in,
-  actual project Region, remaining credits/allowance, and verified SES identities remain required.
+- GitHub Actions passed both offline tests and the infrastructure job, including real Linux
+  container builds and backend/frontend startup checks, for commit `1c016a5`.
+- AWS CLI v2.42.3 and uv 0.13.9 are installed locally using the official installers. The user
+  selected profile `pixel-perfect`, the new AWS experience, and project Region `ap-southeast-2`.
+  The application and deployment draft use this profile/Region; live flags remain disabled.
+- Remote browser authorization completed and STS verified the selected project through profile
+  `pixel-perfect`. Its ID is kept in the ignored local deployment record.
+- Agent Toolkit installed 26 default skills and registered the AWS MCP entry without changing the
+  existing TinyFish connection. Its remote catalog returned 132 skills. The named profile is set
+  in `AWS_MCP_PROXY_PROFILES`. New-experience rules were added to root AGENTS.md with stable markers.
+- Windows Application Control blocks the generated native proxy launcher. An equivalent Python
+  module invocation connected successfully and listed all eight AWS tools without changing any
+  Windows security setting. The user approved this exception to the setup guide's generated
+  arguments, and the module launcher is now saved. All other Codex settings are preserved.
+  After renewing the expired browser session, the saved configuration also connected and listed
+  all eight AWS tools. Restart Codex to load them into the interactive session.
+- No AWS deployment, live model call, S3 upload, or real email has been performed. Regional rates,
+  remaining credits/allowance, and verified SES identities remain required before deployment.
 
 See [AWS setup](aws-setup.md) for the reviewed deployment process and learning exercises.
 
@@ -65,9 +78,8 @@ Reproducible benchmark JSON is generated under the ignored `backend/artifacts/` 
 
 - No paid AWS model, embedding, OCR, S3, or SES calls have been made.
 - No AWS resources have been provisioned; actual deployment and IAM access remain unverified.
-- Docker is unavailable on this machine. AWS CLI is available through the local path above.
-  Dockerfile/Compose runtime behavior still
-  requires Docker. The updated CI now builds containers and checks server startup on Linux.
+- Docker is unavailable on this machine. The Linux CI container build/startup checks passed;
+  deployment on the selected small AWS host remains unverified. AWS CLI is installed locally.
 - No real email was delivered. SES stubs establish request shape; a verified inbox check is separate.
 - Live extraction, semantic retrieval, OCR accuracy, processing costs, and release accuracy targets
   remain unmeasured. Saved outputs can be scored without calling paid services.

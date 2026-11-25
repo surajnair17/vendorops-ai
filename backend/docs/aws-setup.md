@@ -16,20 +16,52 @@ Do not create a second account to solve a sign-in mismatch. See the
 For an advanced account, use an IAM or federated operator for deployment. Run locally:
 
 ```powershell
-aws login --profile vendorops --region us-east-1
-aws sts get-caller-identity --profile vendorops
+aws login --profile pixel-perfect --region ap-southeast-2
+aws sts get-caller-identity --profile pixel-perfect
 ```
 
-On the current development machine, the signed CLI is also extracted under the ignored tools folder:
+On the current development machine, the signed CLI is installed in the user-local programs folder:
 
 ```powershell
-& .\backend\artifacts\tools\aws-cli\Amazon\AWSCLIV2\aws.exe login --profile vendorops --region us-east-1
+& "$env:LOCALAPPDATA\Programs\Amazon\AWSCLIV2\aws.exe" login --remote --profile pixel-perfect --region ap-southeast-2
 ```
 
 This path is machine-local, not part of a fresh clone. Browser login stores temporary credentials
 outside this repository. `boto3[crt]` in requirements-cloud.txt supports those credentials. Configure
-`AWS_PROFILE=vendorops` when running the application locally with live services. EC2 containers use
+`VENDOROPS_AWS_PROFILE=pixel-perfect` when running the application locally with live services. EC2 containers use
 the instance role instead, so they need neither the local profile nor copied keys.
+
+Agent Toolkit for AWS can install the default AWS skills and register its MCP connection:
+
+```powershell
+aws configure agent-toolkit --yes --region us-east-1 --profile pixel-perfect
+aws agent-toolkit list-available-skills --region us-east-1 --profile pixel-perfect
+```
+
+These commands use the toolkit service Region, us-east-1. The selected project Region remains
+ap-southeast-2. The generated MCP entry needs `AWS_MCP_PROXY_PROFILES=pixel-perfect` in its environment;
+this differs from the application's `VENDOROPS_AWS_PROFILE` setting. Preserve existing MCP entries.
+Restart Codex/VS Code after setup to load the new tools and refreshed executable paths. If desired,
+run `/hooks` in Codex to trust the installed AWS skill-update hook; updates wait for that trust.
+
+On Windows, if catalog output fails with a `charmap` Unicode error, set `$env:PYTHONUTF8='1'` and
+`$env:PYTHONIOENCODING='utf-8'` in that terminal and retry. If Application Control blocks the generated
+proxy executable, keep security settings intact. This machine uses the following tested module
+launcher, explicitly approved by the user as an exception to the generated arguments:
+
+```toml
+[mcp_servers.aws-mcp]
+command = "uvx"
+args = ["--from", "mcp-proxy-for-aws@latest", "python", "-m", "mcp_proxy_for_aws.server", "https://aws-mcp.us-east-1.api.aws/mcp", "--metadata", "INSTALL_SOURCE=aws-cli"]
+
+[mcp_servers.aws-mcp.env]
+AWS_MCP_PROXY_PROFILES = "pixel-perfect"
+```
+
+See [AWS's setup instructions](https://raw.githubusercontent.com/aws/agent-toolkit-for-aws/refs/heads/main/setup-instructions/setup.md).
+If the CLI or MCP reports an expired session, renew it with `aws login --profile pixel-perfect`
+and reconnect the MCP server. To add another project later, run `aws login --profile NAME`, append
+`NAME` to the space-separated `AWS_MCP_PROXY_PROFILES` value, and restart Codex.
 
 **Predict:** what will STS report when you select a different account? How does an EC2 container
 obtain temporary credentials without a local profile?
@@ -64,8 +96,9 @@ Use an existing subnet with an Internet Gateway default route. Inbound ports sta
 receives an IPv4 address for outbound package/service access. The read-only checker validates the
 subnet's VPC and route. It does not create networking or change the account plan.
 
-In SES **us-east-1**, create and verify the exact sender and test-recipient email identities. You
-must open the verification links in your own inbox. Stay in the [SES sandbox](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html).
+In SES in the **selected project Region**, create and verify the exact sender and test-recipient
+email identities. You must open the verification links in your own inbox. Stay in the
+[SES sandbox](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html).
 The application and runtime IAM both restrict recipients.
 
 **Practise:** locate these resources in the console and explain why neither a public inbound rule
@@ -109,7 +142,7 @@ Install the [Session Manager plugin](https://docs.aws.amazon.com/systems-manager
 locally, then forward Streamlit using the stack's InstanceId:
 
 ```powershell
-aws ssm start-session --profile vendorops --region us-east-1 --target INSTANCE_ID --document-name AWS-StartPortForwardingSession --parameters 'portNumber=8501,localPortNumber=8501'
+aws ssm start-session --profile pixel-perfect --region ap-southeast-2 --target INSTANCE_ID --document-name AWS-StartPortForwardingSession --parameters 'portNumber=8501,localPortNumber=8501'
 ```
 
 Open localhost:8501. First demonstrate fixture documents, local scanned OCR, review, comparisons,

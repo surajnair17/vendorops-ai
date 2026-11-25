@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     live_calls_enabled: bool = False
     live_send_enabled: bool = False
     aws_region: str = "us-east-1"
+    aws_profile: str = ""
     bedrock_region: str = ""
     model_id: str = "amazon.nova-lite-v1:0"
     embedding_model_id: str = "amazon.titan-embed-text-v2:0"

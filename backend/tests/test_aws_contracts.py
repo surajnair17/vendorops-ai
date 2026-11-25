@@ -9,7 +9,7 @@ from botocore.stub import Stubber
 from backend import db
 from backend.config import settings
 from backend.errors import AppError
-from backend.services.cloud import converse, embed_text, put_source
+from backend.services.cloud import aws_client, converse, embed_text, put_source
 from backend.services.policies import retrieve
 
 
@@ -108,3 +108,24 @@ def test_changing_embedding_model_requires_reindex_before_policy_retrieval(clien
         with pytest.raises(AppError) as error:
             retrieve(connection, "invoice price")
         assert error.value.code == "reindex_required"
+
+
+def test_local_sdk_calls_use_the_selected_login_profile_and_resource_region(client, monkeypatch):
+    monkeypatch.setattr(settings, "live_calls_enabled", True)
+    monkeypatch.setattr(settings, "approved_monthly_budget_usd", 10)
+    monkeypatch.setattr(settings, "aws_profile", "pixel-perfect")
+    monkeypatch.setattr(settings, "aws_region", "ap-southeast-2")
+    monkeypatch.setattr(settings, "bedrock_region", "us-east-1")
+    clients = []
+
+    class Session:
+        def __init__(self, profile_name):
+            assert profile_name == "pixel-perfect"
+
+        def client(self, service, **kwargs):
+            clients.append((service, kwargs["region_name"]))
+
+    monkeypatch.setattr(boto3, "Session", Session)
+    aws_client("s3")
+    aws_client("bedrock-runtime")
+    assert clients == [("s3", "ap-southeast-2"), ("bedrock-runtime", "us-east-1")]

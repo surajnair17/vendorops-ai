@@ -31,7 +31,7 @@ def aws_client(service: str):
     import boto3
     from botocore.config import Config
 
-    return boto3.client(
+    return boto3.Session(profile_name=settings.aws_profile or None).client(
         service,
         region_name=(settings.bedrock_region or settings.aws_region)
         if service == "bedrock-runtime"
