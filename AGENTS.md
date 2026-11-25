@@ -4,6 +4,7 @@
 
 # AWS project defaults
 
+- help_level: MEDIUM. Keep updates brief and ask only when something needs clarification.
 - Use the named CLI profile pixel-perfect.
 - The selected Region is ap-southeast-2 for Regional resources.
 - Keep live application calls disabled until the reviewed deployment plan and usage allowance are agreed.

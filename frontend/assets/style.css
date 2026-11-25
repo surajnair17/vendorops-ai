@@ -1,0 +1,102 @@
+/* Keep native Streamlit controls, focus indicators, and light/dark theme support. */
+.block-container {
+  max-width: 1180px;
+  padding-top: 2.6rem;
+  padding-bottom: 3rem;
+}
+h1, h2, h3 {
+  letter-spacing: -0.035em;
+}
+h1 {
+  font-weight: 750 !important;
+}
+h2 {
+  font-size: 1.65rem !important;
+}
+.vo-eyebrow {
+  color: #0f9884;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  margin-bottom: 0;
+}
+.vo-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin: 1.2rem 0 2.4rem;
+}
+.vo-brand span:not(.vo-brand-mark) {
+  display: block;
+  font-size: 0.47rem;
+  letter-spacing: 0.12em;
+  font-weight: 500;
+  opacity: 0.65;
+  margin-top: 0.25rem;
+}
+.vo-brand-mark {
+  display: grid;
+  place-items: center;
+  background: #0f766e;
+  color: #fff;
+  border-radius: 0.65rem;
+  width: 2.7rem;
+  height: 2.7rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.vo-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+.vo-step {
+  border: 1px solid rgba(128, 145, 160, 0.25);
+  border-radius: 0.85rem;
+  padding: 1.15rem 1.25rem;
+}
+.vo-step span {
+  display: block;
+  color: #0f9884;
+  font: 700 0.7rem monospace;
+  margin-bottom: 0.7rem;
+}
+.vo-step strong {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 0.35rem;
+}
+.vo-step p {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin: 0;
+  line-height: 1.5;
+}
+[data-testid="stMetric"] {
+  border: 1px solid rgba(128, 145, 160, 0.25);
+  border-radius: 0.85rem;
+  padding: 1rem 1.25rem;
+}
+[data-testid="stBaseButton-primary"] {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #fff;
+}
+[data-testid="stBaseButton-primary"]:hover:not(:disabled) {
+  background: #115e59;
+  border-color: #115e59;
+  color: #fff;
+}
+@media (max-width: 720px) {
+  .vo-steps {
+    grid-template-columns: 1fr;
+  }
+  .block-container {
+    padding-top: 1.5rem;
+  }
+}

@@ -1,0 +1,38 @@
+# Documentation
+
+[← Project overview](../../README.md)
+
+Choose a path based on what you want to do. All terminal commands assume the repository root.
+
+## Run and explore
+
+| Guide | What it covers |
+| --- | --- |
+| [Quick start](../../README.md#quick-start) | Install dependencies, start the three processes, and seed a demo |
+| [Guided demo](demo.md) | A ten-minute walkthrough using synthetic vendor documents |
+| [API examples](api.md) | Upload requests, response fields, error codes, and workflow endpoints |
+| [Backend](../README.md) | API, services, persistence, scripts, and worker responsibilities |
+| [Frontend](../../frontend/README.md) | Navigation, screen modules, presentation, and screenshots |
+
+## Understand and learn
+
+| Guide | What it covers |
+| --- | --- |
+| [Architecture](architecture.md) | Data flow, service boundaries, and design decisions |
+| [Learning workbook](learning.md) | Exercises, debugging prompts, and teach-back checkpoints |
+| [Phase roadmap](roadmap.md) | Full development scope and remaining release gates |
+| [Evaluation](evaluation.md) | Dataset splits, scoring, evidence, and fixture versus live results |
+| [Verification record](status.md) | Observed results and what remains unverified |
+
+## Operate and extend
+
+| Guide | What it covers |
+| --- | --- |
+| [Operations](operations.md) | Start/stop, durable jobs, containers, backup, restore, and recovery |
+| [AWS setup](aws-setup.md) | Optional private deployment and separate live-service checks |
+| [Cost worksheet](costs.md) | Hosting assumptions, service usage, and spending controls |
+| [Contributing](../../.github/CONTRIBUTING.md) | Change boundaries, checks, and pull requests |
+
+Start with the local fixture demo. A passing fixture evaluation verifies known responses and
+workflow behavior; it does not establish model accuracy. Cloud deployment and live delivery remain
+separate verification milestones. Screenshots use synthetic data; see [asset provenance](assets/README.md).

@@ -24,8 +24,9 @@ backend with live calls enabled.
    worker result and audit history. Explain why provider acceptance differs from inbox delivery.
 6. Upload the same invoice again and inspect duplicate warnings. Test a corrupt PDF and an unknown
    fixture document to show controlled failures. Show a scan returning no text in the stateless endpoint.
-7. Explain the separate live OCR/cloud gate. Only after the live checklist is completed should a
-   demonstration claim a scanned-document workflow or a real SES inbox delivery works.
+7. Store a generated scan in Documents and request local OCR with Tesseract installed and the
+   worker running. Inspect the recognized text before extracting structured data. Local OCR needs
+   no cloud credentials. Real model extraction and inbox delivery still require separate live checks.
 8. Show the evaluation report and name one limitation. Demonstrate restore into a new directory and
    policy reindexing. Explain why pending sends are marked unknown after restoring an old backup.
 

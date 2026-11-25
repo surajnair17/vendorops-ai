@@ -11,3 +11,8 @@ artifacts/
 *.log
 .coverage
 htmlcov/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.aws/

@@ -1,5 +1,21 @@
 # Verification record — November 25, 2026
 
+## Repository presentation
+
+- The root overview includes a custom SVG banner, CI badge, actual application screenshots,
+  a local-flow diagram, setup commands, and links to the documentation hub.
+- Frontend screens are separated into `frontend/views/`; `app.py` handles navigation and
+  `ui.py` loads the shared visual shell. HTTP and business-workflow boundaries are preserved.
+- Screenshot capture uses isolated synthetic data, temporary servers, and disabled live flags.
+  It approves no actions and sends no email. Browser capture and mobile layout checks are separate
+  from Streamlit's automated smoke walkthrough.
+- Application source remains in `backend/` and `frontend/`. Documentation lives in `backend/docs/`,
+  and contribution templates and CI metadata live in `.github/`.
+- Cleanup verification: 70 tests passed; Ruff lint/format checks and the real-server smoke passed.
+  All 69 local documentation links/anchors resolved, documented endpoints matched OpenAPI, and
+  the sample extraction response matched the parser. Desktop capture and a 390px viewport check
+  passed. GitHub rendered the README successfully; the About description and topics were updated.
+
 ## AWS integration update
 
 - The user chose an AWS Free plan with local OCR. Tesseract is now integrated through the durable
@@ -43,7 +59,7 @@ See [AWS setup](aws-setup.md) for the reviewed deployment process and learning e
 
 - Application source, dependencies, tests, environment examples, and Dockerfiles are separated into
   `backend/` and `frontend/`. Root files are shared repository/CI configuration.
-- **49 tests passed** with Python 3.13.17 on Windows, covering PDF/API behavior, structured output,
+- The earlier **49-test checkpoint** passed with Python 3.13.17 on Windows, covering PDF/API behavior, structured output,
   revisions, matching, financial comparisons, policy evidence/rules, approvals, concurrent workers,
   uncertain delivery, bounded OCR retries with stubs, backup/restore, and evaluation scoring.
 - Ruff lint and formatting checks pass. Git whitespace checks pass.

@@ -1,4 +1,6 @@
-﻿# Frontend
+# Frontend
+
+[← Project overview](../README.md) · [Documentation](../backend/docs/README.md)
 
 Streamlit displays extraction, document review, comparisons, policies, actions, and metrics.
 It communicates through HTTP only and never imports backend logic or opens the database.
@@ -13,6 +15,44 @@ Run from the repository root:
 Copy .env.example to .env in this folder. It configures VENDOROPS_BACKEND_URL and the request
 timeout. Dependencies and the Dockerfile are separate from the backend.
 
-app.py selects screens, client.py handles HTTP errors, and workspace.py implements review flows.
+## Module map
+
+| Path | Responsibility |
+| --- | --- |
+| `app.py` | Entry point, navigation, and screen selection |
+| `client.py` | HTTP requests and readable backend errors |
+| `ui.py` | Shared header, sidebar branding, and style loading |
+| `assets/style.css` | Visual presentation with responsive cards and native theme support |
+| `views/extract.py` | Stateless upload and PDF text extraction |
+| `views/documents.py` | Persistent documents, OCR requests, revisions, and corrections |
+| `views/comparisons.py` | Invoice/PO selection, findings, and policy assessments |
+| `views/policies.py` | Policy versions and confirmed rule management |
+| `views/actions.py` | Drafts, approvals, execution, reconciliation, and history |
+| `views/operations.py` | Provider mode, job outcomes, action states, and usage |
+
+Each screen exposes `render()`. The UI retains native Streamlit controls and focus indicators.
+Styling does not change approval rules, delivery mode, or provider configuration.
 Structured fields currently use validated JSON editing, a transparent learning interface that
 can later become a customer-friendly form.
+
+## Preview assets
+
+The root README uses actual browser screenshots of an isolated local demo. After installing the
+full development environment from the root quick start, install the optional preview dependency:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r frontend/requirements-preview.txt
+.\.venv\Scripts\python.exe -m playwright install chromium
+.\.venv\Scripts\python.exe -m frontend.scripts.capture_demo
+```
+
+If Google Chrome is already installed, skip the browser download and use
+`python -m frontend.scripts.capture_demo --channel chrome` with the project interpreter.
+Use `.venv/bin/python` on macOS/Linux.
+
+The script starts temporary API and frontend processes on available local ports, seeds synthetic
+documents over HTTP, uploads an invoice through the browser, and captures three desktop screens.
+It also checks the mobile layout. It creates no approvals or deliveries, disables live calls,
+uses temporary storage, and stops its own processes afterward. Output goes to
+`backend/docs/assets/`; review images before committing them. Browser tooling is optional and is
+not installed in the application container.
