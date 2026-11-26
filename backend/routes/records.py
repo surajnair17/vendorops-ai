@@ -10,7 +10,7 @@ from backend import db
 from backend.config import settings
 from backend.errors import AppError
 from backend.routes.documents import read_pdf_upload
-from backend.schemas.business import BusinessDocument, issues_for, source_issues
+from backend.schemas.business import SCHEMA_VERSION, BusinessDocument, issues_for, source_issues
 from backend.services.pdf_extractor import extract_pages
 from backend.services.structured import extract_structure
 
@@ -173,7 +173,8 @@ def structure_document(identifier: str):
 
 
 class Correction(BaseModel):
-    expected_revision_id: str
+    expected_revision_id: str | None
+    expected_document_version: int | None = None
     structured: BusinessDocument
 
 
@@ -183,6 +184,14 @@ def correct_document(identifier: str, correction: Correction):
         document = db.get(connection, identifier, "document")
         if document["data"]["revision_id"] != correction.expected_revision_id:
             raise AppError(409, "stale_revision", "Reload the document before saving corrections.")
+        if correction.expected_revision_id is None and correction.expected_document_version is None:
+            raise AppError(
+                422, "document_version_required", "Include the version for an initial review."
+            )
+        if correction.expected_document_version is not None and (
+            document["version"] != correction.expected_document_version
+        ):
+            raise AppError(409, "stale_document", "Reload the document before saving this review.")
         issues = issues_for(correction.structured) + source_issues(
             correction.structured, document["data"]["pages"]
         )
@@ -197,6 +206,7 @@ def correct_document(identifier: str, correction: Correction):
                 "origin": "human",
                 "review_status": "needs_review" if issues else "ready",
                 "parent_id": correction.expected_revision_id,
+                "schema_version": SCHEMA_VERSION,
             },
         )
         db.update(connection, document, {**document["data"], "revision_id": revision["id"]})

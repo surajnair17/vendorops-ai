@@ -7,11 +7,70 @@ import streamlit as st
 from frontend.client import api
 
 
+def review_editor(record: dict):
+    current = next(
+        (r for r in record["revisions"] if r["id"] == record["data"]["revision_id"]), None
+    )
+    structured = current["data"]["structured"] if current else None
+    if current:
+        st.write(f"Provider: {current['data']['provider']}")
+        for issue in current["data"]["issues"]:
+            st.warning(issue)
+    if structured is None:
+        st.info(
+            "No usable extraction yet. Enter fields reviewed against the original PDF. "
+            "This creates a human record and makes no AI call. Leave unknown values null."
+        )
+        structured = {
+            "document_type": "quotation",
+            "supplier": None,
+            "document_number": None,
+            "document_date": None,
+            "valid_until": None,
+            "payment_terms": None,
+            "currency": None,
+            "items": [],
+            "subtotal": None,
+            "discount": None,
+            "taxable_amount": None,
+            "tax_rate_percent": None,
+            "tax": None,
+            "freight": None,
+            "total": None,
+            "evidence": {},
+        }
+    st.caption(
+        "Money and quantities use decimal strings. Evidence format: "
+        '"total": {"page": 1, "quote": "Total: 315.63"}. '
+        "Citations must match source text; check OCR numbers against the original PDF."
+    )
+    edited = st.text_area(
+        "Editable structured JSON",
+        json.dumps(structured, indent=2),
+        height=420,
+        key=f"edit-{record['id']}-{record['version']}",
+    )
+    if st.button("Save corrected revision" if current else "Save initial reviewed record"):
+        try:
+            payload = {
+                "expected_revision_id": record["data"]["revision_id"],
+                "expected_document_version": record["version"],
+                "structured": json.loads(edited),
+            }
+            if api("PATCH", f"/documents/{record['id']}/structured-data", json=payload):
+                st.rerun()
+        except ValueError:
+            st.error("Enter valid JSON before saving.")
+
+
 def render():
     st.header("Document workspace")
-    st.caption(
-        "Fixture mode handles exact generated samples only. Corrections create new revisions."
-    )
+    mode = api("GET", "/metrics")
+    if mode:
+        st.caption(
+            f"Extraction provider: {mode['provider']}. "
+            "Fixture mode handles exact samples only; reviewed fields can be entered manually."
+        )
     uploaded = st.file_uploader("Store a PDF for review", type=["pdf"], key="stored_upload")
     if st.button("Store document", disabled=uploaded is None):
         if api("POST", "/documents", files={"file": (uploaded.name, uploaded.getvalue())}):
@@ -51,30 +110,8 @@ def render():
                 st.rerun()
     with right:
         st.subheader("Structured data and corrections")
-        if record["data"]["revision_id"]:
-            current = next(
-                r for r in record["revisions"] if r["id"] == record["data"]["revision_id"]
-            )
-            st.write(f"Provider: {current['data']['provider']}")
-            for issue in current["data"]["issues"]:
-                st.warning(issue)
-            edited = st.text_area(
-                "Editable structured JSON",
-                json.dumps(current["data"]["structured"], indent=2),
-                height=350,
-                key=f"edit-{current['id']}",
-            )
-            if st.button("Save corrected revision"):
-                try:
-                    payload = {
-                        "expected_revision_id": current["id"],
-                        "structured": json.loads(edited),
-                    }
-                    if api("PATCH", f"/documents/{selected}/structured-data", json=payload):
-                        st.rerun()
-                except ValueError:
-                    st.error("Enter valid JSON before saving.")
-            with st.expander("Revision history"):
-                st.json(record["revisions"])
+        review_editor(record)
+        with st.expander("Revision history"):
+            st.json(record["revisions"])
         with st.expander("Extraction attempt history"):
             st.json(record.get("extraction_attempts", []))

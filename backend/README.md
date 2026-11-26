@@ -28,7 +28,7 @@ backend container includes it. Deployment and local-login instructions are in [A
 | `db.py`, `migrations/` | Transactions, snapshots, and schema versions |
 | `routes/` | Endpoints grouped by business capability |
 | `schemas/` | Pydantic document contracts and validation |
-| `services/` | PDF processing, structured extraction, comparison, policies, OCR, workflows |
+| `services/` | PDF processing, structured extraction, quotation checks, comparison, policies, OCR, workflows |
 | `worker.py` | Durable background job execution |
 | `scripts/` | Synthetic samples, demo seeding, evaluation, backup, and smoke checks |
 | `tests/` | API, domain, concurrency, job, and recovery checks |

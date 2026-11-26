@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pymupdf
 
-from backend.examples import examples
+from backend.examples import examples, quotation_examples
 
 
 def main():
@@ -30,6 +30,15 @@ def main():
                     scan.save(destination / f"{name}-scan.pdf")
                 manifest.append({**labels, "file": f"{name}-scan.pdf", "scanned": True})
     (destination / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    quotes = destination / "quotations"
+    quotes.mkdir(exist_ok=True)
+    for example in quotation_examples():
+        with pymupdf.open() as document:
+            document.new_page().insert_text((40, 50), example["text"], fontsize=8)
+            document.save(quotes / f"{example['data']['document_number']}.pdf")
+    (quotes / "labels.json").write_text(
+        json.dumps(quotation_examples(), indent=2), encoding="utf-8"
+    )
     policies = [
         ("Price tolerance", "Invoice unit price variance up to 10 percent is permitted."),
         ("Quantity", "Quantity overage above zero percent requires review."),

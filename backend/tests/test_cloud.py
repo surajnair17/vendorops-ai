@@ -24,7 +24,14 @@ def test_model_schema_request_usage_and_limit(client, monkeypatch):
 
     class Model:
         def converse(self, **kwargs):
-            assert "untrusted" in kwargs["system"][0]["text"]
+            system = kwargs["system"][0]["text"]
+            assert "untrusted" in system
+            assert all(
+                field in system
+                for field in ("valid_until", "payment_terms", "tax_rate_percent", "taxable_amount")
+            )
+            assert "Do not repair a quantity" in system
+            assert "explicit percent marker" in system
             assert kwargs["inferenceConfig"]["maxTokens"] == settings.max_output_tokens
             return {
                 "output": {"message": {"content": [{"text": '{"document_type":"invoice"}'}]}},

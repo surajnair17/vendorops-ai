@@ -1,4 +1,30 @@
-# Verification record — November 25, 2026
+# Verification record — November 26, 2026
+
+## Quotation milestone
+
+- Added optional quote expiry, payment terms, percentage tax rate, taxable amount, and line
+  taxability. Populated values require source citations; possible identity placeholders and tax-rate
+  evidence without a percent marker require review. Earlier records remain compatible.
+- Added initial human-reviewed records for unknown fixture documents, with document-version and
+  revision checks. Corrections preserve history and continue to display incomplete or unsupported
+  fields. Manual entry does not claim model extraction.
+- Added revision-bound quote assessments for expiry, date contradictions, line calculations,
+  subtotal, stated tax, explicitly taxable line bases, and total. Missing operands skip checks and
+  create review findings. Later corrections make saved assessments stale.
+- Added a Quotes workspace, a separate synthetic commercial-terms PDF, and the
+  [quotation walkthrough](quotations.md). The original 60-document benchmark is unchanged.
+- Schema and extraction prompt metadata are version 2. Evaluation no longer hardcodes version 1
+  or assumes current versions for saved historical outputs with missing provenance.
+- Verification: 91 tests passed; Ruff lint and formatting passed; real-server HTTP/Streamlit smoke
+  passed, including a quote assessment and simulated worker delivery. A headless Chrome check of
+  the running application also created a successful assessment from the synthetic quotation.
+  Existing fixture evaluation produced 60 valid records, 20 correct matches, and the 10 labelled
+  discrepancies with no new findings. These remain fixture results, not live-model accuracy.
+- The PDF Text screen's opt-in local OCR fix was published separately as `79b78d2`. Private input
+  documents, OCR output, screenshots from those documents, configuration, and data remain ignored.
+- Live model calls remain disabled pending a reviewed credit usage allowance. Quotation ranking,
+  layout-aware OCR/confidence, and broader commercial assessment remain future work.
+- Learning exercise and teach-back remain for the learner; see the quotation guide.
 
 ## Repository presentation
 

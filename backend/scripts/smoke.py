@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 import time
+from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -11,6 +12,7 @@ import httpx
 import pymupdf
 from streamlit.testing.v1 import AppTest
 
+from backend.examples import quotation_examples
 from backend.scripts.demo import seed
 
 
@@ -84,6 +86,22 @@ def main() -> None:
                 assert not ui.text_area
                 with httpx.Client(base_url="http://127.0.0.1:18000/api/v1", timeout=60) as api:
                     seeded = seed(api)
+                    with pymupdf.open() as quote_pdf:
+                        quote_pdf.new_page().insert_text(
+                            (40, 50), quotation_examples()[0]["text"], fontsize=8
+                        )
+                        response = api.post(
+                            "/documents", files={"file": ("Q-TERMS-001.pdf", quote_pdf.tobytes())}
+                        )
+                    response.raise_for_status()
+                    quote_id = response.json()["id"]
+                    response = api.post(f"/documents/{quote_id}/structure")
+                    response.raise_for_status()
+                ui.sidebar.radio[0].set_value("Quotes").run(timeout=30)
+                ui.date_input[0].set_value(date(2026, 11, 26)).run()
+                next(b for b in ui.button if b.label == "Assess quotation").click().run(timeout=30)
+                assert not ui.exception, ui.exception
+                assert any("Supported checks passed" in item.value for item in ui.success)
                 for section in ("Documents", "Compare", "Policies", "Actions", "Operations"):
                     ui.sidebar.radio[0].set_value(section).run(timeout=30)
                     assert not ui.exception, (section, ui.exception)

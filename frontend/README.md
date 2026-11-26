@@ -25,6 +25,7 @@ timeout. Dependencies and the Dockerfile are separate from the backend.
 | `assets/style.css` | Visual presentation with responsive cards and native theme support |
 | `views/extract.py` | Stateless text extraction and a separate opt-in local OCR action for scans |
 | `views/documents.py` | Persistent documents, OCR requests, revisions, and corrections |
+| `views/quotations.py` | Expiry, payment terms, financial checks, and revision-bound quotation assessments |
 | `views/comparisons.py` | Invoice/PO selection, findings, and policy assessments |
 | `views/policies.py` | Policy versions and confirmed rule management |
 | `views/actions.py` | Drafts, approvals, execution, reconciliation, and history |
@@ -34,6 +35,10 @@ Each screen exposes `render()`. The UI retains native Streamlit controls and foc
 Styling does not change approval rules, delivery mode, or provider configuration.
 Structured fields currently use validated JSON editing, a transparent learning interface that
 can later become a customer-friendly form.
+
+Documents without a usable model result also offer **Save initial reviewed record**. This manual
+path records provider `human` and preserves unknown values. The **Quotes** screen assesses the
+saved revision without AI calls; see [quotation review](../backend/docs/quotations.md).
 
 ## Preview assets
 

@@ -198,7 +198,7 @@ def score_comparisons(labels: list[dict], observations: dict[str, dict]) -> dict
 
 
 def score_outputs(labels: list[dict], observations: dict[str, dict], mode: str) -> dict:
-    report = {"mode": mode, "schema_version": 1, "prompt_version": 1}
+    report = {"mode": mode, "schema_version": None, "prompt_version": None}
     for scanned, group in ((False, "digital"), (True, "scanned")):
         subset = [label for label in labels if label["scanned"] == scanned]
         report[group] = score_group(subset, observations)

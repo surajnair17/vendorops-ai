@@ -6,9 +6,10 @@ from pathlib import Path
 from time import perf_counter
 
 from backend.config import settings
+from backend.schemas.business import SCHEMA_VERSION
 from backend.services.evaluation import score_outputs
 from backend.services.pdf_extractor import extract_pages
-from backend.services.structured import extract_structure
+from backend.services.structured import PROMPT_VERSION, extract_structure
 
 
 def evaluate(manifest_path: Path, live: bool = False, results_path: Path | None = None) -> dict:
@@ -24,7 +25,10 @@ def evaluate(manifest_path: Path, live: bool = False, results_path: Path | None 
             if (split == "all" or label["split"] == split)
             and (saved.get("include_scans", True) or not label["scanned"])
         ]
-        return score_outputs(selected, saved["documents"], f"recorded:{saved['provider']}")
+        report = score_outputs(selected, saved["documents"], f"recorded:{saved['provider']}")
+        for key in ("schema_version", "prompt_version", "model_id"):
+            report[key] = saved.get(key)
+        return report
     if live and settings.provider != "bedrock":
         raise ValueError(
             "Live evaluation requires the bedrock provider and live-call configuration."
@@ -48,6 +52,8 @@ def evaluate(manifest_path: Path, live: bool = False, results_path: Path | None 
         observations[label["file"]]["latency_seconds"] = perf_counter() - started
     mode = "live_model" if live else "fixture_plumbing_only"
     report = score_outputs(selected, observations, mode)
+    report["schema_version"] = SCHEMA_VERSION
+    report["prompt_version"] = PROMPT_VERSION
     report["model_id"] = settings.model_id if live else None
     report["scanned"]["note"] = (
         "Supply --results with recorded OCR text and structured outputs to score scans."

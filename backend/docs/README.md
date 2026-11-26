@@ -10,6 +10,7 @@ Choose a path based on what you want to do. All terminal commands assume the rep
 | --- | --- |
 | [Quick start](../../README.md#quick-start) | Install dependencies, start the three processes, and seed a demo |
 | [Guided demo](demo.md) | A ten-minute walkthrough using synthetic vendor documents |
+| [Quotation review](quotations.md) | Commercial fields, manual entry, expiry checks, arithmetic, and limitations |
 | [API examples](api.md) | Upload requests, response fields, error codes, and workflow endpoints |
 | [Backend](../README.md) | API, services, persistence, scripts, and worker responsibilities |
 | [Frontend](../../frontend/README.md) | Navigation, screen modules, presentation, and screenshots |

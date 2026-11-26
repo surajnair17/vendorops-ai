@@ -6,7 +6,15 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from frontend.ui import render_shell
-from frontend.views import actions, comparisons, documents, extract, operations, policies
+from frontend.views import (
+    actions,
+    comparisons,
+    documents,
+    extract,
+    operations,
+    policies,
+    quotations,
+)
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
@@ -16,6 +24,7 @@ render_shell()
 screens = {
     "PDF Text": extract.render,
     "Documents": documents.render,
+    "Quotes": quotations.render,
     "Compare": comparisons.render,
     "Policies": policies.render,
     "Actions": actions.render,

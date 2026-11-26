@@ -4,21 +4,24 @@ from pydantic import ValidationError
 
 from backend.config import settings
 from backend.errors import AppError
-from backend.examples import examples
-from backend.schemas.business import BusinessDocument, issues_for, source_issues
+from backend.examples import examples, quotation_examples
+from backend.schemas.business import SCHEMA_VERSION, BusinessDocument, issues_for, source_issues
+
+PROMPT_VERSION = 2
 
 
 class FixtureProvider:
     mode = "fixture"
 
     def extract(self, text: str, repair: bool = False) -> str:
-        for example in examples():
+        for example in [*examples(), *quotation_examples()]:
             if text.strip() == example["text"]:
                 return json.dumps(example["data"])
         raise AppError(
             422,
             "fixture_unavailable",
-            "No fixture matches this text. Use generated samples or configure live AI.",
+            "No fixture matches this text. Use generated samples, enter reviewed fields manually, "
+            "or configure live AI.",
         )
 
 
@@ -52,8 +55,8 @@ def extract_structure(text: str, pages: list[str], provider=None) -> dict:
                 "review_status": "needs_review" if issues else "ready",
                 "provider": provider.mode,
                 "attempts": attempt + 1,
-                "schema_version": 1,
-                "prompt_version": 1,
+                "schema_version": SCHEMA_VERSION,
+                "prompt_version": PROMPT_VERSION,
                 "model_id": settings.model_id if provider.mode == "bedrock" else None,
             }
         except (ValidationError, json.JSONDecodeError):
@@ -66,7 +69,7 @@ def extract_structure(text: str, pages: list[str], provider=None) -> dict:
         "review_status": "needs_review",
         "provider": provider.mode,
         "attempts": 2,
-        "schema_version": 1,
-        "prompt_version": 1,
+        "schema_version": SCHEMA_VERSION,
+        "prompt_version": PROMPT_VERSION,
         "model_id": settings.model_id if provider.mode == "bedrock" else None,
     }

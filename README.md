@@ -31,6 +31,7 @@ fixtures, local storage, and simulated email. Live services and real sending are
 | --- | --- |
 | **Extract** | Read digital PDFs; request local Tesseract OCR for scanned pages. |
 | **Review** | Inspect source text alongside validated fields; retain every correction as a revision. |
+| **Assess quotes** | Review expiry and payment terms; check stated line totals, taxable amounts, tax, and totals. |
 | **Compare** | Match an invoice to a purchase order and calculate differences with Python `Decimal`. |
 | **Check policy** | Retrieve cited passages and apply only human-confirmed rules. |
 | **Approve** | Edit a follow-up draft, approve its exact content, then explicitly execute delivery. |
@@ -143,6 +144,11 @@ a price difference, an inactive policy, an unconfirmed rule, and an **unapproved
 Follow **Documents → Compare → Policies → Actions**. See the [demo script](backend/docs/demo.md)
 for a ten-minute walkthrough.
 
+For quotation review, upload `backend/artifacts/samples/quotations/Q-TERMS-001.pdf` in Documents,
+extract its fixture, then open **Quotes**. Set the assessment date to `2026-11-26` to check its
+dates and amounts. Unfamiliar quotes can start with manually reviewed fields. See the
+[quotation walkthrough](backend/docs/quotations.md) for supported formulas and limitations.
+
 ### Local OCR and containers
 
 For native OCR, install Tesseract with English language data and set
@@ -167,6 +173,8 @@ for stop, backup, and restore commands. Container builds and startup are checked
 flowchart LR
     A[PDF upload] --> B[Text extraction / local OCR]
     B --> C[Validated business record]
+    C --> Q[Quotation dates and arithmetic]
+    Q --> R[Revision-bound assessment]
     C --> D[Invoice and PO comparison]
     D --> E[Policy evidence + confirmed rules]
     E --> F[Review and email draft]
@@ -239,6 +247,7 @@ screen, and exercises approved **simulated** delivery using an isolated database
 | --- | --- |
 | Local review workflow, comparisons, policies, simulated actions, audit, backup/restore | Implemented and tested |
 | Local OCR | Tested on a small synthetic corpus; customer-scan accuracy is unverified |
+| Quotation fields and deterministic assessments | Implemented locally; ranking and live extraction accuracy remain unverified |
 | Cloud adapters and deployment templates | Implemented; live deployment, model quality, and inbox delivery remain unverified |
 | Learning exercises and teach-back | Intended for the learner to complete |
 

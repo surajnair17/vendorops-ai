@@ -66,6 +66,7 @@ All paths below are relative to `/api/v1`. The interactive API docs define full 
 | Purpose | Endpoint examples |
 | --- | --- |
 | Documents and revisions | `GET /documents`, `GET /documents/{id}`, `PATCH /documents/{id}/structured-data` |
+| Quotation assessment | `POST /documents/{id}/quote-assessments`, `GET /quote-assessments/{id}` |
 | Scanned-page processing | `POST /documents/{id}/ocr`, `GET /jobs/{id}` |
 | Matching and comparison | `GET /documents/{id}/match-candidates`, `POST /comparisons` |
 | Policy evidence | `GET /policies`, `POST /comparisons/{id}/policy-assessments` |
@@ -77,6 +78,12 @@ All paths below are relative to `/api/v1`. The interactive API docs define full 
 Creating a draft does not authorize a send. Review binds approval to an exact revision, and
 execution is a separate request. Edits and stale source reports invalidate approval. Job-creating
 background requests return `202`, a job ID, and a status URL; poll that URL to inspect the outcome.
+
+Unknown fixture documents can receive an initial human-reviewed record through the correction
+endpoint with `expected_revision_id: null` and `expected_document_version` from the document.
+Quotation assessments require the current `expected_revision_id` and an explicit `as_of` date.
+They return `201` synchronously and make no model call. See [quotation review](quotations.md)
+for example bodies, fields, checks, and stale-report behavior.
 
 ## Error contract
 

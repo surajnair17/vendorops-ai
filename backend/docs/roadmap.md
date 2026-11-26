@@ -24,3 +24,8 @@ Live outputs must establish these targets; fixture scores do not satisfy them.
 
 Extensions: cumulative partial invoicing, richer tax conventions, quotation ranking, agreement
 interpretation, public authentication, tenant isolation, and real-customer hardening.
+
+Quotation follow-up: expiry, payment terms, tax rate, taxable base, manual initial records, and
+deterministic assessments are implemented locally. See [quotation review](quotations.md).
+Live model accuracy, layout-aware OCR, varied quotation benchmarks, and supplier ranking remain
+separate work. Fixture results do not remove those gates.

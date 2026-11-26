@@ -40,6 +40,8 @@ def test_failed_documents_stay_in_denominator_and_missed_findings_count():
     result = score_outputs(labels, observations, "test")
     assert result["digital"]["critical_field_accuracy"] == 0.5
     assert result["digital"]["completion_rate"] == 0.5
+    assert result["schema_version"] is None
+    assert result["prompt_version"] is None
     assert result["matching_and_comparison"]["discrepancy_recall"] == 0
     assert result["matching_and_comparison"]["unresolved_matches"] == 1
 
@@ -85,3 +87,12 @@ def test_recorded_run_scores_missing_documents_in_selected_split(tmp_path):
     result = evaluate(manifest, results_path=saved)
     assert result["digital"]["documents"] == 2
     assert result["digital"]["completion_rate"] == 0.5
+    assert result["schema_version"] is None
+    assert result["prompt_version"] is None
+    saved_data = json.loads(saved.read_text(encoding="utf-8"))
+    saved_data.update({"schema_version": 1, "prompt_version": 1, "model_id": "recorded-model"})
+    saved.write_text(json.dumps(saved_data), encoding="utf-8")
+    result = evaluate(manifest, results_path=saved)
+    assert result["schema_version"] == 1
+    assert result["prompt_version"] == 1
+    assert result["model_id"] == "recorded-model"
