@@ -23,7 +23,7 @@ timeout. Dependencies and the Dockerfile are separate from the backend.
 | `client.py` | HTTP requests and readable backend errors |
 | `ui.py` | Shared header, sidebar branding, and style loading |
 | `assets/style.css` | Visual presentation with responsive cards and native theme support |
-| `views/extract.py` | Stateless upload and PDF text extraction |
+| `views/extract.py` | Stateless text extraction and a separate opt-in local OCR action for scans |
 | `views/documents.py` | Persistent documents, OCR requests, revisions, and corrections |
 | `views/comparisons.py` | Invoice/PO selection, findings, and policy assessments |
 | `views/policies.py` | Policy versions and confirmed rule management |

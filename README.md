@@ -147,8 +147,10 @@ for a ten-minute walkthrough.
 
 For native OCR, install Tesseract with English language data and set
 `VENDOROPS_TESSERACT_COMMAND` in `backend/.env` to its executable path when it is not on `PATH`.
-Store a scan in Documents, request OCR, and let the worker process it. PDF Text remains stateless
-and returns `no_text` for an image-only document.
+Store a scan in Documents, request OCR, and let the worker process it. On PDF Text, an image-only
+upload offers **Read scanned PDF with local OCR**; this separate action saves a review copy and
+shows the recognized text after refreshing job status. The **Extract Text** operation and its
+stateless API still return `no_text` for an image-only document.
 
 The backend container includes Tesseract. After creating `backend/.env`, an alternative local start is:
 
