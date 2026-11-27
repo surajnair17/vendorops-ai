@@ -1,0 +1,41 @@
+{
+  "title": "VendorOps AI: completed local portfolio walkthrough",
+  "recorded_on": "2026-11-27",
+  "status": "completed",
+  "file": "vendorops-demo.mp4",
+  "sha256": "68a9849af1288d653109e928a6fc87fe7ac7675240748114bad793c771a33953",
+  "duration_seconds": 138.48,
+  "resolution": [
+    1440,
+    1000
+  ],
+  "frames_per_second": 25.0,
+  "codec": "h264",
+  "audio": false,
+  "data": "synthetic documents only",
+  "providers": {
+    "pdf_text": "PyMuPDF",
+    "ocr": "tesseract",
+    "purchase_order": "fixture",
+    "invoice": "human-reviewed after real OCR",
+    "quotation": "fixture",
+    "embeddings": "fixture lexical",
+    "vector_store": "sqlite",
+    "email": "simulated"
+  },
+  "outcomes": {
+    "documents": 3,
+    "successful_jobs": 2,
+    "action_state": "sent",
+    "delivery_attempts": 1,
+    "approval_matches_content_revision": true,
+    "quote_assessment": "checks_passed",
+    "recording_processes_stopped": true
+  },
+  "live_aws_calls_enabled": false,
+  "real_email_sent": false,
+  "limitations": [
+    "Fixture extraction and lexical retrieval do not establish live model accuracy.",
+    "The video does not demonstrate AWS deployment or real inbox delivery."
+  ]
+}

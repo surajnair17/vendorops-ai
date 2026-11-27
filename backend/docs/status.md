@@ -1,5 +1,29 @@
 # Verification record — November 27, 2026
 
+## Current snapshot
+
+| Area | Latest observed result |
+| --- | --- |
+| Local tests | 104 tests passed; Ruff lint and formatting passed |
+| Browser walkthrough | [2 minute 18 second recording](assets/vendorops-demo.mp4), real local OCR, fixture AI, simulated email |
+| HTTP and frontend | Real-server upload/review smoke and actual Chrome walkthrough passed |
+| CI | Offline tests and Linux container build/startup passed for `ae4f202` |
+| AWS | Sign-in and model access verified; regional inference quotas are zero, so live AI is blocked |
+| Cloud release | Deployment, live AI accuracy, and real inbox delivery remain unverified |
+
+The sections below retain milestone evidence. Older entries describe the state at their checkpoint;
+the current snapshot and latest live attempt take precedence when interpreting status.
+
+The presentation refresh publishes the reviewed synthetic demo, its media manifest, and a complete
+quotation screenshot. The four still captures passed the actual Chrome walkthrough and a 390px
+mobile layout check. GitHub rendered the README successfully; all 103 local documentation links
+and anchors resolved. The repository About description and topics now include quotation review
+and the recorded demo. Credentials, private documents, detailed run receipts, and runtime data
+remain excluded from Git.
+
+<details>
+<summary><strong>Milestone evidence and historical decisions</strong></summary>
+
 ## Live attempt and regional quota blocker
 
 - Renewed sign-in verified the expected project through `pixel-perfect` in `ap-southeast-2`.
@@ -32,7 +56,8 @@
 
 - Recorded the actual application at 1440 × 1000, with chapter captions, synthetic inputs, and an
   isolated database. The 2 minute 18 second H.264 MP4 decoded successfully; sampled frames were
-  inspected. The recording and its run receipt are local ignored artifacts.
+  inspected. A reviewed synthetic copy is now published in [presentation assets](assets/README.md);
+  the full run receipt, logs, and database remain local ignored artifacts.
 - The completed flow uploaded a digital PDF, stored a PO, ran real Tesseract OCR on a scanned
   invoice, saved a human-reviewed invoice revision, detected the price variance, retrieved policy
   evidence, applied a confirmed rule, edited and approved a draft, executed one simulated delivery,
@@ -42,8 +67,8 @@
   temporary recording processes stopped. No real email was sent.
 - This run used fixture extraction and lexical embeddings; the scanned invoice was explicitly
   reviewed by a human because its OCR text did not match an exact fixture. No live AI accuracy is
-  claimed. The approved local-run credit allowance is $10; AWS login remains required and no paid
-  AWS calls have occurred.
+  claimed. At this checkpoint the approved local-run credit allowance was $10 and no AWS runtime
+  calls had occurred. The later live attempt and quota blocker are documented above.
 - Added a repeatable browser recorder and an optional SQLite cosine index for small local policy
   collections. Windows Application Control blocks a native dependency imported by Chroma on this
   machine. The alternative needs no security-policy changes; Chroma remains the default elsewhere.
@@ -168,6 +193,8 @@ Commands:
 
 Reproducible benchmark JSON is generated under the ignored `backend/artifacts/` directory. See
 [evaluation methodology](evaluation.md), [demo steps](demo.md), and [operations](operations.md).
+
+</details>
 
 ## Remaining gates
 

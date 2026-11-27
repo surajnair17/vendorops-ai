@@ -8,12 +8,15 @@ import subprocess
 import sys
 import time
 from contextlib import contextmanager
+from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import httpx
 import pymupdf
 from playwright.sync_api import expect, sync_playwright
+
+from backend.examples import quotation_examples
 
 ROOT = Path(__file__).resolve().parents[2]
 ASSETS = ROOT / "backend/docs/assets"
@@ -88,6 +91,7 @@ def capture(channel: str | None) -> None:
             "VENDOROPS_PROVIDER": "fixture",
             "VENDOROPS_STORAGE_MODE": "local",
             "VENDOROPS_CHROMA_HOST": "",
+            "VENDOROPS_VECTOR_STORE": "sqlite",
             "VENDOROPS_LIVE_CALLS_ENABLED": "false",
             "VENDOROPS_LIVE_SEND_ENABLED": "false",
             "VENDOROPS_OPERATOR": "demo-operator",
@@ -108,6 +112,8 @@ def capture(channel: str | None) -> None:
                         "127.0.0.1",
                         "--server.port",
                         str(ui_port),
+                        "--server.fileWatcherType",
+                        "none",
                         "--browser.gatherUsageStats",
                         "false",
                         "--theme.base",
@@ -147,6 +153,16 @@ def capture(channel: str | None) -> None:
                             (40, 50), "\n\n".join(source["data"]["pages"]), fontsize=10
                         )
                         content = pdf.tobytes()
+                    example = quotation_examples()[0]
+                    with pymupdf.open() as pdf:
+                        pdf.new_page().insert_text((40, 50), example["text"], fontsize=8)
+                        quote_content = pdf.tobytes()
+                    quotation = (
+                        api.post("/documents", files={"file": ("Q-TERMS-001.pdf", quote_content)})
+                        .raise_for_status()
+                        .json()
+                    )
+                    api.post(f"/documents/{quotation['id']}/structure").raise_for_status()
                 ASSETS.mkdir(parents=True, exist_ok=True)
                 with sync_playwright() as playwright:
                     browser = playwright.chromium.launch(channel=channel, headless=True)
@@ -192,6 +208,36 @@ def capture(channel: str | None) -> None:
                         full_page=True,
                         animations="disabled",
                     )
+                    page.set_viewport_size({"width": 1440, "height": 1600})
+                    page.get_by_test_id("stSidebar").get_by_text("Quotes", exact=True).click()
+                    expect(page.get_by_role("heading", name="Quotation review")).to_be_visible()
+                    expect(page.get_by_role("button", name="Assess quotation")).to_be_visible()
+                    expect(page.get_by_test_id("stApp")).to_have_attribute(
+                        "data-test-script-state", "notRunning"
+                    )
+                    as_of = page.get_by_test_id("stDateInput").locator("input").first
+                    as_of.fill(date(2026, 11, 27).strftime("%Y/%m/%d"))
+                    as_of.press("Enter")
+                    as_of.press("Escape")
+                    page.get_by_role("heading", name="Quotation review", exact=True).click()
+                    page.wait_for_timeout(700)
+                    expect(page.get_by_test_id("stApp")).to_have_attribute(
+                        "data-test-script-state", "notRunning"
+                    )
+                    page.get_by_role("button", name="Assess quotation", exact=True).click()
+                    expect(
+                        page.get_by_text(
+                            "Supported checks passed. This is not purchase approval.", exact=True
+                        )
+                    ).to_be_visible()
+                    expect(page.get_by_test_id("stApp")).to_have_attribute(
+                        "data-test-script-state", "notRunning"
+                    )
+                    page.screenshot(
+                        path=str(ASSETS / "quotation-review.png"),
+                        full_page=True,
+                        animations="disabled",
+                    )
                     page.get_by_test_id("stSidebar").get_by_text("Operations", exact=True).click()
                     expect(page.get_by_role("heading", name="Action states")).to_be_visible()
                     expect(
@@ -220,7 +266,10 @@ def capture(channel: str | None) -> None:
                         "document.documentElement.scrollWidth <= window.innerWidth"
                     ), "Mobile layout overflows horizontally"
                     browser.close()
-                print("Captured extraction, document review, and operations; mobile layout passed.")
+                print(
+                    "Captured extraction, document and quotation review, and operations; "
+                    "mobile layout passed."
+                )
             except Exception:
                 log.flush()
                 # The log belongs to isolated synthetic processes, not the user's running app.

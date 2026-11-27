@@ -12,18 +12,23 @@
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="#see-it-in-action">Screenshots</a> ·
+  <a href="#see-it-in-action">Watch the demo</a> ·
   <a href="#how-it-works">Architecture</a> ·
   <a href="backend/docs/README.md">Documentation</a> ·
   <a href="backend/docs/learning.md">Learning workbook</a>
 </p>
 
-VendorOps AI helps an operator review vendor documents, compare invoices with purchase orders,
-check purchasing policies, and approve follow-up emails. It keeps source evidence, numerical
-checks, and human decisions connected throughout the workflow.
+**Turn vendor PDFs into purchasing decisions you can review.**
+
+VendorOps AI extracts document text, helps an operator review invoices and quotations, compares
+invoices with purchase orders, and connects discrepancies to purchasing policies. Follow-up drafts
+retain their evidence and require approval of the exact content before execution.
 
 **Run the local demo without AWS credentials.** It uses synthetic documents, deterministic extraction
 fixtures, local storage, and simulated email. Live services and real sending are disabled by default.
+
+**Verified November 27, 2026:** [104 local tests](backend/docs/status.md), a completed browser
+walkthrough, and [passing offline CI and container checks](https://github.com/surajnair17/vendorops-ai/actions/workflows/test.yml).
 
 ## What you can do
 
@@ -42,24 +47,42 @@ editing an email invalidates its approval. An uncertain delivery outcome require
 
 ## See it in action
 
-![Actual local application extracting a synthetic invoice, with source text and document metrics](backend/docs/assets/extraction.png)
+[![Watch the local demo: three documents, two completed jobs, and an approved simulated follow-up](backend/docs/assets/demo-preview.png)](backend/docs/assets/vendorops-demo.mp4)
+
+**[Watch or download the full walkthrough · 2 min 18 sec](backend/docs/assets/vendorops-demo.mp4)**
+
+Digital PDF → scanned-invoice OCR → reviewed fields → invoice/PO discrepancy → confirmed policy →
+edited draft → approval → simulated delivery → quotation checks.
+
+The recording uses **real PDF parsing and local Tesseract OCR**, **fixture AI extraction and lexical
+retrieval**, and **simulated email**. The scanned invoice is explicitly saved as a human-reviewed
+revision. It uses synthetic documents throughout. [Chapters and evidence](backend/docs/demo.md#recorded-walkthrough)
+· [Reproduce the recording](frontend/README.md#record-an-end-to-end-walkthrough).
 
 <details>
-<summary><strong>Document review and operational metrics</strong></summary>
+<summary><strong>Explore the application screens</strong></summary>
+
+Digital PDF upload and text extraction:
+
+![Actual local application extracting a synthetic invoice, with source text and document metrics](backend/docs/assets/extraction.png)
 
 Source text and editable structured data, side by side:
 
 ![Document workspace showing a synthetic invoice and its structured extraction](backend/docs/assets/document-review.png)
 
+Quotation dates, terms, tax, and arithmetic for the saved revision:
+
+![Quotation review showing fixture provenance, validity, payment terms, and supported financial checks](backend/docs/assets/quotation-review.png)
+
 Counts from the running local demonstration:
 
-![Operational metrics showing fixture mode, two documents, and an unapproved draft](backend/docs/assets/operations.png)
+![Operational metrics showing fixture mode, three documents, and an unapproved draft](backend/docs/assets/operations.png)
 
 </details>
 
-These are screenshots of the running application using synthetic data. PDF text comes from actual
-PDF bytes; structured business extraction uses fixtures. The draft is unapproved and no email has
-been sent. [Reproduce the screenshots](frontend/README.md#preview-assets).
+The still screenshots use a separate seeded demo with an unapproved draft and no deliveries.
+The video executes one approved simulated delivery. [Asset provenance](backend/docs/assets/README.md)
+· [Reproduce the screenshots](frontend/README.md#preview-assets).
 
 ## Quick start
 
@@ -148,7 +171,7 @@ To capture the full flow as a captioned MP4, follow the
 [browser recording instructions](frontend/README.md#record-an-end-to-end-walkthrough).
 
 For quotation review, upload `backend/artifacts/samples/quotations/Q-TERMS-001.pdf` in Documents,
-extract its fixture, then open **Quotes**. Set the assessment date to `2026-11-26` to check its
+extract its fixture, then open **Quotes**. Set the assessment date to `2026-11-27` to check its
 dates and amounts. Unfamiliar quotes can start with manually reviewed fields. See the
 [quotation walkthrough](backend/docs/quotations.md) for supported formulas and limitations.
 
@@ -160,6 +183,10 @@ Store a scan in Documents, request OCR, and let the worker process it. On PDF Te
 upload offers **Read scanned PDF with local OCR**; this separate action saves a review copy and
 shows the recognized text after refreshing job status. The **Extract Text** operation and its
 stateless API still return `no_text` for an image-only document.
+
+If Windows blocks a native Chroma dependency, set `VENDOROPS_VECTOR_STORE=sqlite` in
+`backend/.env`. This uses exact cosine retrieval over vectors in SQLite for the small local corpus.
+Rebuild existing policy indexes after switching backends. [Index design](backend/docs/architecture.md).
 
 The backend container includes Tesseract. After creating `backend/.env`, an alternative local start is:
 
@@ -204,6 +231,9 @@ See [architecture and decisions](backend/docs/architecture.md) for the boundarie
 
 Application source stays in two folders. Root files contain shared project and tooling settings.
 
+<details>
+<summary><strong>Explore backend/ and frontend/</strong></summary>
+
 ```text
 vendorops-ai/
 ├── backend/
@@ -223,7 +253,7 @@ vendorops-ai/
 │   ├── ui.py                # Shared visual shell
 │   ├── views/               # One module per workspace screen
 │   ├── assets/              # Shared presentation styles
-│   ├── scripts/             # Reproducible screenshot capture
+│   ├── scripts/             # Browser screenshots and end-to-end recordings
 │   └── tests/               # Streamlit checks
 ├── .github/                 # CI and contribution templates
 ├── AGENTS.md                # Coding-agent project instructions
@@ -233,6 +263,8 @@ vendorops-ai/
 
 Each application folder owns its dependencies, configuration example, Dockerfile, and README.
 Runtime data, PDFs, credentials, local configuration, and generated reports are excluded from Git.
+
+</details>
 
 ## Verification and current scope
 
@@ -251,13 +283,19 @@ screen, and exercises approved **simulated** delivery using an isolated database
 | Local review workflow, comparisons, policies, simulated actions, audit, backup/restore | Implemented and tested |
 | Local OCR | Tested on a small synthetic corpus; customer-scan accuracy is unverified |
 | Quotation fields and deterministic assessments | Implemented locally; ranking and live extraction accuracy remain unverified |
-| Cloud adapters and deployment templates | Implemented; live deployment, model quality, and inbox delivery remain unverified |
+| Bedrock extraction and Titan embeddings | Adapters and read-only preflight implemented; live attempts blocked by zero regional inference quotas |
+| AWS deployment, storage, and inbox delivery | Templates and adapters implemented; live deployment and delivery remain unverified |
 | Learning exercises and teach-back | Intended for the learner to complete |
 
 This is a **single-company, single-operator portfolio PoC**. It supports English documents and one
 currency per document. Public access, multiple tenants, payment execution, ERP integration, currency
 conversion, and cumulative partial-invoice accounting are outside this release.
 Read the [verification record](backend/docs/status.md) before interpreting benchmark claims.
+
+**Current cloud blocker:** sign-in and model access were verified in `ap-southeast-2`, but applied
+Nova Lite and Titan inference quotas were zero. Three runtime attempts were throttled. A read-only
+preflight now blocks further live recordings before inference when quotas are unavailable. The
+Free plan remains selected. [AWS setup and quota checks](backend/docs/aws-setup.md#5-verify-each-live-service-separately).
 
 ## Explore further
 
@@ -268,7 +306,7 @@ Read the [verification record](backend/docs/status.md) before interpreting bench
 | Work on a screen | [Frontend guide](frontend/README.md) |
 | Learn while building | [Workbook](backend/docs/learning.md) · [Phase roadmap](backend/docs/roadmap.md) |
 | Try the HTTP contract | [API examples](backend/docs/api.md) |
-| Run a portfolio walkthrough | [Demo script](backend/docs/demo.md) |
+| Watch or run a portfolio walkthrough | [Video](backend/docs/assets/vendorops-demo.mp4) · [Demo guide](backend/docs/demo.md) |
 | Prepare optional cloud verification | [AWS setup](backend/docs/aws-setup.md) · [Cost worksheet](backend/docs/costs.md) |
 | Make a change | [Contributing](.github/CONTRIBUTING.md) |
 

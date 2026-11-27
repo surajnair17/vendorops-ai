@@ -56,7 +56,9 @@ If Google Chrome is already installed, skip the browser download and use
 Use `.venv/bin/python` on macOS/Linux.
 
 The script starts temporary API and frontend processes on available local ports, seeds synthetic
-documents over HTTP, uploads an invoice through the browser, and captures three desktop screens.
+documents over HTTP, uploads an invoice through the browser, and captures extraction, document
+review, quotation assessment, and operations screens. The quotation uses a fixed assessment date
+of November 27, 2026 so that the example remains reproducible.
 It also checks the mobile layout. It creates no approvals or deliveries, disables live calls,
 uses temporary storage, and stops its own processes afterward. Output goes to
 `backend/docs/assets/`; review images before committing them. Browser tooling is optional and is
@@ -90,3 +92,7 @@ before starting servers; a zero or unreadable quota blocks recording without inv
 The allowance argument is a configuration check, not a billing cap.
 Inspect the receipt: a live provider setting alone does not prove extraction accuracy or successful
 inference. Application defaults remain offline.
+
+A reviewed synthetic run is published as the [portfolio walkthrough](../backend/docs/demo.md#recorded-walkthrough).
+Review generated media before committing it; keep private documents, databases, receipts, and logs
+out of the repository. The public asset manifest contains only selected provider modes and outcomes.
