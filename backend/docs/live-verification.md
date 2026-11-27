@@ -2,10 +2,10 @@
 
 [Project overview](../../README.md) · [Verification record](status.md) · [AWS setup](aws-setup.md)
 
-On November 28, 2026 (Asia/Kolkata), one synthetic approval-to-SES workflow completed against real
-AWS services in `ap-southeast-2`. The message reached the verified owner's **Spam folder**, not the
-Inbox. Live structured extraction and semantic retrieval remain blocked by zero inference quotas.
-This is component verification; the full live cloud release is incomplete.
+On November 28, 2026 (Asia/Kolkata), separate synthetic **S3 storage/recovery** and **approval-to-SES**
+checks completed against real AWS services in `ap-southeast-2`. The email reached the verified owner's
+**Spam folder**, not the Inbox. Live structured extraction and semantic retrieval remain blocked by
+zero inference quotas. These are component checks; the full live cloud release is incomplete.
 
 The [sanitized result](evidence/live-verification-2026-11-28.json) records observed outcomes without
 personal addresses, project IDs, message IDs, credentials, or private document contents.
@@ -60,26 +60,53 @@ runtime inference calls. Raising the local $10 allowance cannot change an AWS qu
 Support request has been prepared for the project owner; it has not been submitted on their behalf.
 The project remains on the Free plan with no cross-Region inference.
 
-## Storage and deployment gates
+## Live S3 storage and recovery
 
-An isolated S3-only change set is prepared for review: one private, versioned, AES256-encrypted bucket
-and its HTTPS-only policy. It contains no EC2 or inference resources. Local cfn-lint passed, the change
-set reached `CREATE_COMPLETE`, and scoped CloudFormation validation reported no errors.
+The owner explicitly approved the reviewed S3-only plan and cleanup. The test created one private,
+versioned, AES256-encrypted bucket and its HTTPS-only policy, with no EC2 or inference resources.
+Local cfn-lint passed, the change set reached `CREATE_COMPLETE`, and scoped CloudFormation validation
+reported no errors. Before execution, the stored AWS template matched the reviewed local template.
 
-Guard reports two advisory findings: missing S3 access logging and its existing limitation recognizing
-the template's valid string-valued HTTPS condition. No durable CloudTrail trail was found, so durable
-audit logging has not been verified. The change set has **not been executed**; no bucket or host has
-been provisioned. The empty review stack and exact private plan remain pending the owner's approval
-and cleanup choice. See the [infrastructure assessment](infrastructure-checks.md) for rule context.
+| Check | Observed result |
+| --- | --- |
+| Bucket controls | All four Block Public Access settings true; AES256 encryption; versioning enabled; bucket-owner-enforced ownership |
+| Transport policy | Read back the deployed policy and verified its non-HTTPS deny for the bucket and its objects |
+| Application upload | Two real multipart HTTP requests through a temporary local Uvicorn API used the actual S3 adapter |
+| Stored sources | Downloaded both S3 PDFs; SHA-256 matched their original bytes |
+| Application processing | Fixture structured extraction and a real Python comparison; no inference calls |
+| Cloud backup | Uploaded a ZIP containing consistent application and previously completed SES backups; downloaded SHA-256 matched |
+| Restoration | Both backups restored into fresh local directories; two source PDFs and the sent email action survived |
+| Restart | Restored worker found no queued send; no new email or duplicate delivery |
+| Data volume | Three objects totaling 13,961 bytes: 2,039 bytes of PDFs and an 11,922-byte backup |
+| Cleanup | Removed all three stored versions, deleted the stack, then deleted its retained bucket |
+| Cleanup confirmation | Bucket returned `NoSuchBucket`, Sydney inventory contained zero buckets, stack status was `DELETE_COMPLETE` |
+
+The bucket's `Retain` policy was preserved; cleanup therefore explicitly removed the retained bucket
+after CloudFormation deleted its policy and stack. Ownership, run tags, object keys, and total size
+were checked before deletion. Local source data and private receipts remain available outside Git.
+The temporary API stopped and application live flags remain disabled.
+
+Guard reported two advisory findings: missing S3 access logging and its existing limitation recognizing
+the valid string-valued HTTPS condition. No durable CloudTrail trail was found, so durable audit logging
+remains unverified. See the [infrastructure assessment](infrastructure-checks.md) for rule context.
+
+### Learning checkpoint
+
+Trace `multipart upload → FastAPI validation → PyMuPDF → local source + S3 → saved record`.
+The storage test deliberately retained fixture extraction so an AWS model quota could not hide an
+independent storage failure. A Windows newline mismatch initially stopped execution: normalizing
+the UTF-8 text reproduced the reviewed digest, and AWS's original template was also compared before
+provisioning. A checksum match verifies those stored bytes; it does not establish extraction accuracy.
+
+## Remaining deployment gates
 
 Remaining release evidence:
 
 - Resolve the inference quotas, then measure actual extraction and retrieval on held-out examples.
-- Complete approved S3 upload, checksum, cloud backup/download, restoration, and cleanup checks.
 - Review and explicitly deploy the private host; verify its health, access, restart, and recovery.
 - Demonstrate aligned sender-domain authentication and check actual Inbox placement.
 - Record the full live workflow after its missing stages succeed; retain the existing video's fixture labels.
 
 The existing [recording](demo.md#recorded-walkthrough) remains a local demonstration with real OCR,
-fixture AI, and simulated email. It does not show this later SES test. Service charges have not been
+fixture AI, and simulated email. It does not show these later S3 and SES tests. Service charges have not been
 independently reconciled against billing; the agreed allowance is not a claim of zero measured spend.

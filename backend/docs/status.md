@@ -11,7 +11,8 @@
 | AWS | Free plan, sign-in, model access, network, and SES email identity verified; five inference quotas remain zero |
 | Live SES | One approved real send reached Gmail Spam; provider ID matched; Inbox placement failed |
 | Recovery | Local backup restored both source PDFs and the sent action; restart did not resend |
-| Cloud release | Host and live AI remain unverified; S3-only change set awaits approval |
+| Live S3 | Two real HTTP uploads, checksum checks, cloud backup/download, and restoration passed; test bucket and versions removed |
+| Cloud release | Host and live AI remain unverified; zero inference quotas block full completion |
 
 The sections below retain milestone evidence. Older entries describe the state at their checkpoint;
 the current snapshot and latest live attempt take precedence when interpreting status.
@@ -56,9 +57,12 @@ remain excluded from Git.
   Local backup/restore preserved two PDFs, the approval, and the sent state. Live flags were disabled
   afterward. [Live verification and sanitized evidence](live-verification.md) document this check,
   the sender-domain alignment failure, and the remaining cloud gates. No model calls were retried.
-- A separate S3-only change set reached `CREATE_COMPLETE` with no validation errors; it has not
-  been executed. It awaits resource-plan approval and a cleanup choice. No EC2 host or S3 bucket
-  has been provisioned; the five inference quota blockers remain unchanged.
+- After explicit approval, the separate S3-only change set was executed. Two real HTTP uploads
+  stored synthetic PDFs through the application adapter, and downloaded SHA-256 values matched.
+  The consistent backup also survived S3 upload/download and restoration. All three object versions,
+  the stack, and its retained bucket were removed as approved; a read-only check confirmed deletion
+  and zero Sydney buckets. No EC2 host, new model call, or additional email was created by this test.
+  The five inference quota blockers remain unchanged. [Detailed evidence](live-verification.md).
 
 <details>
 <summary><strong>Milestone evidence and historical decisions</strong></summary>

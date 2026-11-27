@@ -35,12 +35,12 @@ For development, start with the quick start and the backend/frontend guides.
 | --- | --- |
 | [Operations](operations.md) | Start/stop, durable jobs, containers, backup, restore, and recovery |
 | [AWS setup](aws-setup.md) | Optional private deployment and separate live-service checks |
-| [Live verification](live-verification.md) | Actual SES delivery, local recovery, sanitized evidence, and remaining AWS blockers |
+| [Live verification](live-verification.md) | Actual S3 uploads/recovery/cleanup, SES delivery, sanitized evidence, and remaining AWS blockers |
 | [Infrastructure checks](infrastructure-checks.md) | Reproduce AWS Guard validation and review its findings |
 | [Cost worksheet](costs.md) | Hosting assumptions, service usage, and spending controls |
 | [Contributing](../../.github/CONTRIBUTING.md) | Change boundaries, checks, and pull requests |
 
 Start with the local fixture demo. A passing fixture evaluation verifies known responses and
-workflow behavior; it does not establish model accuracy. One real SES delivery was verified separately
-in Spam; host deployment and live AI remain incomplete. Screenshots use synthetic data; see
-[asset provenance](assets/README.md).
+workflow behavior; it does not establish model accuracy. Separate real S3 recovery and SES delivery
+checks passed, with the email in Spam; host deployment and live AI remain incomplete. Screenshots
+use synthetic data; see [asset provenance](assets/README.md).

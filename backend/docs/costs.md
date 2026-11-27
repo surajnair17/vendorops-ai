@@ -1,12 +1,15 @@
 # Cost worksheet
 
 Three Bedrock runtime attempts were throttled; none returned a successful result or token usage.
-Their charges have not been independently verified. No EC2 host or S3 bucket has been provisioned.
+Their charges have not been independently verified. No EC2 host has been provisioned. An approved
+S3 test created one bucket, uploaded three objects totaling 13,961 bytes, verified recovery, then
+removed all stored versions, the stack, and the bucket. Actual S3 charges have not been reconciled.
 One SES identity is verified and one approved application email was accepted and received in Gmail
 Spam. Its actual charge has not been independently reconciled against billing. No further inference
-attempts were made during the [SES and recovery check](live-verification.md).
-The application requires an explicitly agreed
-budget and opt-in flags; its limits count reserved attempts, including failures. Model and embedding
+attempts were made during the [live integration checks](live-verification.md).
+
+The application requires an explicitly agreed budget and opt-in flags; its limits count reserved
+attempts, including failures. Model and embedding
 calls share a daily allowance. OCR counts jobs (each can include up to the configured page maximum),
 and email has a separate send allowance. None of these replace AWS billing controls.
 
@@ -18,8 +21,8 @@ No EC2, S3, or other persistent cloud resources are needed for the recording. OC
 email is simulated. Sign-in and model access have been verified, but applied regional inference
 quotas are zero. Live inference requires AWS to resolve that separate quota blocker.
 
-The later November 28 check used one real SES send and local backup/restore. An S3-only plan is
-prepared but not executed, within the existing $10 allowance and pending resource approval. For
+The later November 28 checks used one real SES send and an explicitly approved S3-only test within
+the existing $10 allowance. Storage, cloud backup/download, restoration, and cleanup passed. For
 10 MiB retained for a month, 50 Tier 1 and 200 Tier 2 requests, the current
 [Sydney S3 Price List](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonS3/current/ap-southeast-2/index.json)
 gives a calculated storage/request subtotal of **$0.000607140625**. Transfer and taxes are extra;

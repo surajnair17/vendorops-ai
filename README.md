@@ -28,7 +28,8 @@ retain their evidence and require approval of the exact content before execution
 fixtures, local storage, and simulated email. Live services and real sending are disabled by default.
 
 **Verified November 28, 2026:** [118 Python tests and four Guard runner checks](backend/docs/status.md),
-a completed local browser walkthrough, and one approved **real SES email received in Gmail Spam**.
+a completed local browser walkthrough, **live S3 upload and recovery checks**, and one approved
+**real SES email received in Gmail Spam**. The temporary S3 resources were removed after verification.
 [Live verification](backend/docs/live-verification.md) separates these results from the blocked AI and deployment checks.
 
 ## What you can do
@@ -286,7 +287,8 @@ screen, and exercises approved **simulated** delivery using an isolated database
 | Quotation fields and deterministic assessments | Implemented locally; ranking and live extraction accuracy remain unverified |
 | Bedrock extraction and Titan embeddings | Adapters and read-only preflight implemented; live attempts blocked by zero regional inference quotas |
 | SES approval and delivery | One real approved send received in Gmail Spam; inbox placement failed |
-| AWS deployment and storage | Templates and adapters implemented; host and live storage verification pending |
+| S3 source storage and recovery | Real HTTP uploads, checksums, backup download, restoration, and resource cleanup verified |
+| AWS host deployment | Template and preflight implemented; host verification blocked by inference quotas |
 | Learning exercises and teach-back | Intended for the learner to complete |
 
 This is a **single-company, single-operator portfolio PoC**. It supports English documents and one
@@ -298,7 +300,7 @@ Read the [verification record](backend/docs/status.md) before interpreting bench
 Nova Lite and Titan inference quotas were zero. Three runtime attempts were throttled. A read-only
 preflight now blocks further live recordings before inference when quotas are unavailable. The
 Free plan remains selected. [AWS setup and quota checks](backend/docs/aws-setup.md#5-verify-each-live-service-separately).
-The live SES check and local restoration passed independently; neither establishes live model accuracy.
+The separate live S3 and SES checks passed; they do not establish live model accuracy.
 
 ## Explore further
 
