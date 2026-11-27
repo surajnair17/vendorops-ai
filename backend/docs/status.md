@@ -5,7 +5,7 @@
 | Area | Latest observed result |
 | --- | --- |
 | Local tests | 104 tests passed; Ruff lint and formatting passed |
-| Browser walkthrough | [2 minute 18 second recording](assets/vendorops-demo.mp4), real local OCR, fixture AI, simulated email |
+| Browser walkthrough | [2 minute 18 second recording](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4), real local OCR, fixture AI, simulated email |
 | HTTP and frontend | Real-server upload/review smoke and actual Chrome walkthrough passed |
 | CI | Offline tests and Linux container build/startup passed for `ae4f202` |
 | AWS | Sign-in and model access verified; regional inference quotas are zero, so live AI is blocked |
@@ -17,7 +17,8 @@ the current snapshot and latest live attempt take precedence when interpreting s
 The presentation refresh publishes the reviewed synthetic demo, its media manifest, and a complete
 quotation screenshot. The four still captures passed the actual Chrome walkthrough and a 390px
 mobile layout check. GitHub rendered the README successfully; all 103 local documentation links
-and anchors resolved. The repository About description and topics now include quotation review
+and anchors resolved before the direct-download links replaced the repository's video-preview links.
+The repository About description and topics now include quotation review
 and the recorded demo. Credentials, private documents, detailed run receipts, and runtime data
 remain excluded from Git.
 

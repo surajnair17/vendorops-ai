@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="#see-it-in-action">Watch the demo</a> ·
+  <a href="#see-it-in-action">Demo video</a> ·
   <a href="#how-it-works">Architecture</a> ·
   <a href="backend/docs/README.md">Documentation</a> ·
   <a href="backend/docs/learning.md">Learning workbook</a>
@@ -47,9 +47,9 @@ editing an email invalidates its approval. An uncertain delivery outcome require
 
 ## See it in action
 
-[![Watch the local demo: three documents, two completed jobs, and an approved simulated follow-up](backend/docs/assets/demo-preview.png)](backend/docs/assets/vendorops-demo.mp4)
+[![Download the local demo: three documents, two completed jobs, and an approved simulated follow-up](backend/docs/assets/demo-preview.png)](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4)
 
-**[Watch or download the full walkthrough · 2 min 18 sec](backend/docs/assets/vendorops-demo.mp4)**
+**[Download the full walkthrough · MP4 · 2 min 18 sec](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4)**
 
 Digital PDF → scanned-invoice OCR → reviewed fields → invoice/PO discrepancy → confirmed policy →
 edited draft → approval → simulated delivery → quotation checks.
@@ -306,7 +306,7 @@ Free plan remains selected. [AWS setup and quota checks](backend/docs/aws-setup.
 | Work on a screen | [Frontend guide](frontend/README.md) |
 | Learn while building | [Workbook](backend/docs/learning.md) · [Phase roadmap](backend/docs/roadmap.md) |
 | Try the HTTP contract | [API examples](backend/docs/api.md) |
-| Watch or run a portfolio walkthrough | [Video](backend/docs/assets/vendorops-demo.mp4) · [Demo guide](backend/docs/demo.md) |
+| Watch or run a portfolio walkthrough | [Download video](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4) · [Demo guide](backend/docs/demo.md) |
 | Prepare optional cloud verification | [AWS setup](backend/docs/aws-setup.md) · [Cost worksheet](backend/docs/costs.md) |
 | Make a change | [Contributing](.github/CONTRIBUTING.md) |
 

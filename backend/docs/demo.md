@@ -2,9 +2,9 @@
 
 ## Recorded walkthrough
 
-**[Watch or download the captioned demo (MP4, 2 min 18 sec)](assets/vendorops-demo.mp4)**
+**[Download the captioned demo (MP4, 2 min 18 sec)](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4)**
 
-[![Completed local demonstration showing fixture mode and simulated delivery](assets/demo-preview.png)](assets/vendorops-demo.mp4)
+[![Completed local demonstration showing fixture mode and simulated delivery](assets/demo-preview.png)](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4)
 
 The recording was captured from the actual local Streamlit application on November 27, 2026,
 using isolated synthetic documents. It has on-screen chapter captions and no audio.
