@@ -1,0 +1,9 @@
+{
+  "name": "vendorops-infrastructure-checks",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Optional AWS Guard validation; not an application dependency.",
+  "engines": { "node": ">=20" },
+  "scripts": { "check": "node check.cjs", "test": "node --test test.cjs" },
+  "dependencies": { "@aws/cloudformation-guard": "3.4.0" }
+}

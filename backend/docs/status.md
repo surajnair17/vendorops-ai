@@ -1,4 +1,4 @@
-# Verification record — November 27, 2026
+# Verification record — November 28, 2026
 
 ## Current snapshot
 
@@ -41,10 +41,13 @@ remain excluded from Git.
   real-server frontend/API smoke checks passed. AWS confirmed the Free plan, available model access,
   and five zero non-adjustable inference quotas. One SES identity verification was requested with
   user authorization; the link was still pending at the last check. No application email was sent.
-- CloudFormation Guard is not installed; its installation awaits the separate permission requested
-  by its skill. Template lint and AWS syntax validation do not establish a deployed or fully
-  compliant application. Live extraction/retrieval quality, inbox arrival, and host recovery remain
-  unverified until AWS quotas and the remaining deployment gates are resolved.
+- CloudFormation Guard 3.4.0 is now installed through AWS's official Node/WebAssembly binding after
+  the approved native executable was blocked by Windows Application Control. Security settings
+  remain unchanged. The [November 28 assessment](infrastructure-checks.md) reports 12 messages across
+  eight rules, including optional Paid-plan gaps, hardening requirements, and two checker limitations.
+  Strict validation returns 1; CI publishes an advisory report without claiming compliance.
+  Live extraction/retrieval quality, inbox arrival, and host recovery remain unverified until AWS
+  quotas and the remaining deployment gates are resolved.
 
 <details>
 <summary><strong>Milestone evidence and historical decisions</strong></summary>

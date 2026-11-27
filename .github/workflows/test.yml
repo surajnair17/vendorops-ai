@@ -46,3 +46,27 @@ jobs:
       - run: curl --fail http://127.0.0.1:8000/health && curl --fail http://127.0.0.1:8501/_stcore/health
       - if: always()
         run: docker compose -f backend/infra/compose.yaml down
+  guard:
+    name: AWS Guard advisory report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: aws-cloudformation/aws-guard-rules-registry
+          ref: 7f7340c26ae5d5e8874651dbffeb12e0e9f505b6
+          path: backend/artifacts/aws/guard/rules-registry
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: backend/infra/guard/package-lock.json
+      - run: npm --prefix backend/infra/guard ci --ignore-scripts --no-audit --no-fund
+      - run: npm --prefix backend/infra/guard test
+      - name: Publish findings for review; this is not a compliance pass
+        run: npm --prefix backend/infra/guard run check -- --report-only
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aws-guard-findings
+          path: backend/artifacts/aws/guard/report.sarif.json

@@ -116,6 +116,9 @@ nor a long-lived access key is needed. Verify that credits have not expired befo
 .\.venv\Scripts\python.exe -m backend.scripts.aws_setup plan --config backend/artifacts/aws/deployment.json
 ```
 
+Run the separate [AWS Guard security assessment](infrastructure-checks.md) as well. Its pinned
+rules currently report 12 messages requiring the documented review; this is not a compliance pass.
+
 The checker calls STS, Free Tier plan status, EC2 describe APIs, regional Bedrock model catalog/access,
 Service Quotas, and SES identity metadata.
 It does not invoke a model, OCR, send email, or provision resources. Missing login, wrong account,

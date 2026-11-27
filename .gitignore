@@ -16,3 +16,4 @@ Thumbs.db
 .idea/
 .vscode/
 .aws/
+node_modules/
