@@ -2,7 +2,9 @@
 
 Three Bedrock runtime attempts were throttled; none returned a successful result or token usage.
 Their charges have not been independently verified. No EC2 host or S3 bucket has been provisioned.
-One SES email identity has been created for verification; no application email has been sent.
+One SES identity is verified and one approved application email was accepted and received in Gmail
+Spam. Its actual charge has not been independently reconciled against billing. No further inference
+attempts were made during the [SES and recovery check](live-verification.md).
 The application requires an explicitly agreed
 budget and opt-in flags; its limits count reserved attempts, including failures. Model and embedding
 calls share a daily allowance. OCR counts jobs (each can include up to the configured page maximum),
@@ -15,6 +17,13 @@ preference. This authorization covers the bounded local demonstration, not alway
 No EC2, S3, or other persistent cloud resources are needed for the recording. OCR runs locally and
 email is simulated. Sign-in and model access have been verified, but applied regional inference
 quotas are zero. Live inference requires AWS to resolve that separate quota blocker.
+
+The later November 28 check used one real SES send and local backup/restore. An S3-only plan is
+prepared but not executed, within the existing $10 allowance and pending resource approval. For
+10 MiB retained for a month, 50 Tier 1 and 200 Tier 2 requests, the current
+[Sydney S3 Price List](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonS3/current/ap-southeast-2/index.json)
+gives a calculated storage/request subtotal of **$0.000607140625**. Transfer and taxes are extra;
+this is an estimate, not a guaranteed cap or a measurement of billed usage. No host is included.
 
 The [Sydney Bedrock Price List](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBedrock/current/ap-southeast-2/index.json)
 returned these on-demand USD rates on November 27, 2026:

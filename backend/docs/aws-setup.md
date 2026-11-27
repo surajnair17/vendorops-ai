@@ -162,6 +162,9 @@ policies, and a simulated send. Keep a copy of the deployed commit and stack out
 
 ## 5. Verify each live service separately
 
+See [observed live verification](live-verification.md) for the latest results. One approved SES test
+reached Gmail Spam, and local recovery passed; the host and live AI stages remain incomplete.
+
 Before enabling Bedrock, check actual model access and applied inference quotas from the local
 development environment:
 

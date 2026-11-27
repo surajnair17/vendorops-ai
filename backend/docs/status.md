@@ -9,7 +9,9 @@
 | HTTP and frontend | Real-server upload/review smoke and actual Chrome walkthrough passed |
 | CI | Offline tests, Linux container build/startup, and the Guard advisory job passed for `0294db8` |
 | AWS | Free plan, sign-in, model access, network, and SES email identity verified; five inference quotas remain zero |
-| Cloud release | Deployment, live AI accuracy, and real inbox delivery remain unverified |
+| Live SES | One approved real send reached Gmail Spam; provider ID matched; Inbox placement failed |
+| Recovery | Local backup restored both source PDFs and the sent action; restart did not resend |
+| Cloud release | Host and live AI remain unverified; S3-only change set awaits approval |
 
 The sections below retain milestone evidence. Older entries describe the state at their checkpoint;
 the current snapshot and latest live attempt take precedence when interpreting status.
@@ -48,9 +50,15 @@ remain excluded from Git.
   Strict validation returns 1; CI publishes an advisory report without claiming compliance.
   Live extraction/retrieval quality, inbox arrival, and host recovery remain unverified until AWS
   quotas and the remaining deployment gates are resolved.
-- The November 28 read-only preflight confirms the SES identity is now verified. A synthetic SES
-  test draft is stored in an isolated workspace as `pending_review`, with no approval, queued send,
-  or delivery. Its exact content has been presented for explicit approval. No model calls were retried.
+- On November 28 the owner authorized the displayed synthetic SES test. The application approved
+  its exact content revision and the worker sent it once through real SES. Gmail's provider ID
+  matched and arrival was confirmed in **Spam**, not Inbox. A second worker pass did not resend.
+  Local backup/restore preserved two PDFs, the approval, and the sent state. Live flags were disabled
+  afterward. [Live verification and sanitized evidence](live-verification.md) document this check,
+  the sender-domain alignment failure, and the remaining cloud gates. No model calls were retried.
+- A separate S3-only change set reached `CREATE_COMPLETE` with no validation errors; it has not
+  been executed. It awaits resource-plan approval and a cleanup choice. No EC2 host or S3 bucket
+  has been provisioned; the five inference quota blockers remain unchanged.
 
 <details>
 <summary><strong>Milestone evidence and historical decisions</strong></summary>

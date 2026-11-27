@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "verification_date": "2026-11-28",
+  "date_timezone": "Asia/Kolkata",
+  "region": "ap-southeast-2",
+  "plan": "FREE",
+  "scope": "synthetic application approval, real SES delivery, and local recovery",
+  "full_live_release_complete": false,
+  "providers": {
+    "pdf_text": "pymupdf",
+    "structured_extraction": "fixture",
+    "source_storage": "local",
+    "email": "ses"
+  },
+  "workflow": {
+    "synthetic_documents": 2,
+    "comparison": "deterministic_python",
+    "api_transport": "in_process_fastapi_test_client",
+    "approved_content_revision": 2,
+    "sent_content_revision": 2,
+    "approval_records": 1,
+    "delivery_attempts": 1,
+    "action_state": "sent",
+    "job_status": "succeeded",
+    "second_worker_pass_did_work": false
+  },
+  "delivery": {
+    "ses_accepted": true,
+    "mailbox_arrival_verified": true,
+    "mailbox_provider_id_matched": true,
+    "folder": "spam",
+    "inbox_placement_verified": false,
+    "spf_ses_domain": "pass",
+    "dkim_ses_domain": "pass",
+    "dmarc_from_domain": "fail",
+    "mailbox_modified": false,
+    "automatic_resend": false
+  },
+  "local_recovery": {
+    "consistent_backup_created": true,
+    "restored_database_opened": true,
+    "source_documents_restored": 2,
+    "approval_records_restored": 1,
+    "delivery_attempts_restored": 1,
+    "state_after_restore": "sent",
+    "worker_after_restart_did_work": false,
+    "duplicate_send": false
+  },
+  "bedrock": {
+    "model_access_authorized": true,
+    "zero_applied_quotas": 5,
+    "new_runtime_attempts_in_this_check": 0,
+    "successful_live_response": false,
+    "support_request_prepared": true,
+    "support_case_submitted": false
+  },
+  "storage": {
+    "change_set_status": "CREATE_COMPLETE",
+    "validation_errors": 0,
+    "guard_messages": 2,
+    "change_set_executed": false,
+    "bucket_provisioned": false,
+    "durable_cloudtrail_verified": false
+  },
+  "host_deployed": false,
+  "live_flags_enabled_after_check": false,
+  "billing_independently_reconciled": false,
+  "private_identifiers_redacted": true
+}

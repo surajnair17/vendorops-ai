@@ -27,8 +27,9 @@ retain their evidence and require approval of the exact content before execution
 **Run the local demo without AWS credentials.** It uses synthetic documents, deterministic extraction
 fixtures, local storage, and simulated email. Live services and real sending are disabled by default.
 
-**Verified November 27, 2026:** [104 local tests](backend/docs/status.md), a completed browser
-walkthrough, and [passing offline CI and container checks](https://github.com/surajnair17/vendorops-ai/actions/workflows/test.yml).
+**Verified November 28, 2026:** [118 Python tests and four Guard runner checks](backend/docs/status.md),
+a completed local browser walkthrough, and one approved **real SES email received in Gmail Spam**.
+[Live verification](backend/docs/live-verification.md) separates these results from the blocked AI and deployment checks.
 
 ## What you can do
 
@@ -284,7 +285,8 @@ screen, and exercises approved **simulated** delivery using an isolated database
 | Local OCR | Tested on a small synthetic corpus; customer-scan accuracy is unverified |
 | Quotation fields and deterministic assessments | Implemented locally; ranking and live extraction accuracy remain unverified |
 | Bedrock extraction and Titan embeddings | Adapters and read-only preflight implemented; live attempts blocked by zero regional inference quotas |
-| AWS deployment, storage, and inbox delivery | Templates and adapters implemented; live deployment and delivery remain unverified |
+| SES approval and delivery | One real approved send received in Gmail Spam; inbox placement failed |
+| AWS deployment and storage | Templates and adapters implemented; host and live storage verification pending |
 | Learning exercises and teach-back | Intended for the learner to complete |
 
 This is a **single-company, single-operator portfolio PoC**. It supports English documents and one
@@ -296,6 +298,7 @@ Read the [verification record](backend/docs/status.md) before interpreting bench
 Nova Lite and Titan inference quotas were zero. Three runtime attempts were throttled. A read-only
 preflight now blocks further live recordings before inference when quotas are unavailable. The
 Free plan remains selected. [AWS setup and quota checks](backend/docs/aws-setup.md#5-verify-each-live-service-separately).
+The live SES check and local restoration passed independently; neither establishes live model accuracy.
 
 ## Explore further
 

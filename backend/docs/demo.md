@@ -28,8 +28,9 @@ using isolated synthetic documents. It has on-screen chapter captions and no aud
 | Delivery | One simulated attempt, bound to approval of the edited content revision |
 | Quotation | Saved assessment reports `checks_passed` for supported dates and arithmetic |
 
-This demonstrates local workflow behavior. Live model accuracy, cloud deployment, and inbox delivery
-remain unverified. The later AWS attempt was throttled by zero regional inference quotas; see the
+This recording demonstrates local workflow behavior. A later, separate [live SES check](live-verification.md)
+reached Gmail Spam; it is not shown in this video. Live model accuracy, cloud deployment, and Inbox
+placement remain unverified. The AWS inference attempt was throttled by zero regional quotas; see the
 [verification record](status.md). The public [media manifest](assets/demo-manifest.json) records
 provider modes, observed outcomes, and the video's SHA-256. Private source files and runtime logs
 are excluded from the repository.
