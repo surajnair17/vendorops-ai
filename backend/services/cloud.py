@@ -124,7 +124,37 @@ def provider_failure(error, usage, *, kind, started, connection=None):
     )
 
 
+def require_regional_model(identifier: str):
+    if identifier.startswith("arn:"):
+        parts = identifier.split(":", 5)
+        valid = (
+            len(parts) == 6
+            and parts[2] == "bedrock"
+            and parts[3] == settings.aws_region
+            and parts[5].startswith("foundation-model/")
+        )
+    else:
+        valid = (
+            "." in identifier
+            and "/" not in identifier
+            and identifier.split(".", 1)[0] not in {"us", "eu", "apac", "global", "au", "jp"}
+        )
+    if not valid:
+        raise AppError(
+            422,
+            "regional_model_required",
+            "Use a foundation model in the selected Region. "
+            "Inference profiles and cross-Region model references are disabled.",
+        )
+
+
 def converse(system: str, user: str) -> str:
+    require_live()
+    require_regional_model(settings.model_id)
+    if len(user) > settings.max_model_characters:
+        raise AppError(
+            413, "model_input_too_large", "The model input exceeds the configured budget."
+        )
     usage = reserve_usage("model")
     start = monotonic()
     try:
@@ -186,6 +216,14 @@ class BedrockProvider:
 
 
 def embed_text(text: str, connection=None) -> list[float]:
+    require_live()
+    require_regional_model(settings.embedding_model_id)
+    if not text.strip() or len(text) > settings.max_model_characters:
+        raise AppError(
+            413,
+            "embedding_input_too_large",
+            "Embedding text must be nonempty and within the input budget.",
+        )
     usage = reserve_usage("embedding", connection)
     started = monotonic()
     try:

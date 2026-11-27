@@ -1,5 +1,6 @@
 import pymupdf
 
+from backend.config import settings
 from backend.errors import AppError
 from backend.schemas.documents import ExtractionResponse
 
@@ -16,7 +17,18 @@ def extract_pages(content: bytes) -> list[str]:
                 raise AppError(422, "encrypted_pdf", "Password-protected PDFs are not supported.")
             if not document.page_count:
                 raise AppError(400, "empty_pdf", "The PDF has no pages.")
-            return [page.get_text(sort=True).strip() for page in document]
+            if document.page_count > settings.max_document_pages:
+                raise AppError(413, "too_many_pages", "Document exceeds the configured page limit.")
+            pages, characters = [], 0
+            for page in document:
+                text = page.get_text(sort=True).strip()
+                characters += len(text)
+                if characters > settings.max_extracted_characters:
+                    raise AppError(
+                        413, "extracted_text_too_large", "PDF text exceeds the processing limit."
+                    )
+                pages.append(text)
+            return pages
     except AppError:
         raise
     except (pymupdf.FileDataError, RuntimeError, ValueError) as error:

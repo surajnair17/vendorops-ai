@@ -136,12 +136,10 @@ def complete_ocr(notification: dict) -> bool:
         return False
     pages = [[] for _ in range(document["data"]["page_count"])]
     if status == "SUCCEEDED":
-        next_token = None
-        while True:
-            arguments = {"JobId": notification["JobId"]}
-            if next_token:
-                arguments["NextToken"] = next_token
-            result = aws_client("textract").get_document_text_detection(**arguments)
+        textract = aws_client("textract")
+        for result in textract.get_paginator("get_document_text_detection").paginate(
+            JobId=notification["JobId"]
+        ):
             if result.get("JobStatus") != "SUCCEEDED":
                 status = "FAILED"
                 break
@@ -149,9 +147,6 @@ def complete_ocr(notification: dict) -> bool:
                 page = block.get("Page", 0)
                 if block.get("BlockType") == "LINE" and 1 <= page <= len(pages):
                     pages[page - 1].append(block["Text"])
-            next_token = result.get("NextToken")
-            if not next_token:
-                break
     return apply_ocr_result(job["id"], pages, status, "textract")
 
 
@@ -180,6 +175,19 @@ def apply_ocr_result(job_id: str, pages: list[list[str]], status: str, provider:
             original if original.strip() else "\n".join(scanned)
             for original, scanned in zip(document["data"]["pages"], pages)
         ]
+        if sum(map(len, combined)) > settings.max_extracted_characters:
+            db.update(
+                connection,
+                current,
+                {**current["data"], "status": "failed", "error_code": "ocr_text_too_large"},
+            )
+            db.audit(
+                connection,
+                document["id"],
+                "ocr_failed",
+                {"job_id": job_id, "code": "ocr_text_too_large"},
+            )
+            return True
         db.create(
             connection,
             "text_revision",

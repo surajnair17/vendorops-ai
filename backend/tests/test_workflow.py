@@ -161,3 +161,41 @@ def test_two_workers_cannot_send_the_same_job(client):
         results = list(pool.map(lambda _: process_email_once(Sender()), range(2)))
     assert sorted(results) == [False, True]
     assert calls == [action["id"]]
+
+
+def test_crash_leaves_durable_attempt_and_late_result_is_retained(client):
+    from datetime import UTC, datetime, timedelta
+
+    action = approve(client, new_action(client))
+    response = client.post(
+        f"/api/v1/actions/{action['id']}/execute", json={"expected_version": action["version"]}
+    ).json()
+
+    class SlowSender:
+        def send(self, item):
+            with db.transaction() as connection:
+                attempts = db.all_records(connection, "delivery_attempt")
+                assert len(attempts) == 1 and attempts[0]["data"]["state"] == "sending"
+                job = db.get(connection, response["job_id"], "job")
+                db.update(
+                    connection,
+                    job,
+                    {
+                        **job["data"],
+                        "lease_until": (datetime.now(UTC) - timedelta(seconds=1)).isoformat(),
+                    },
+                )
+            assert process_email_once() is False  # Recovery while the original call is in flight.
+            return {"provider": "simulated", "message_id": "late-provider-acceptance"}
+
+    assert process_email_once(SlowSender())
+    detail = client.get(f"/api/v1/actions/{action['id']}").json()
+    assert detail["data"]["state"] == "unknown"  # Still requires human reconciliation.
+    assert len(detail["history"]["delivery_attempt"]) == 1
+    assert (
+        detail["history"]["delivery_attempt"][0]["data"]["message_id"] == "late-provider-acceptance"
+    )
+    job = client.get(response["status_url"]).json()
+    assert job["data"]["status"] == "unknown"
+    assert job["data"]["late_result"]["message_id"] == "late-provider-acceptance"
+    assert not process_email_once()

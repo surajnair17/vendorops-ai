@@ -11,7 +11,7 @@ AI-assisted implementation does not replace that learning time.
 | 3 | 4 | Matching and deterministic reports | Hand-calculate a report and explain ambiguity |
 | 4 | 4 | Retrieval and confirmed rules | Experiment with chunking; measure semantic retrieval |
 | 5 | 4 | Approval, audit, simulated outbox | Explain idempotency and uncertain delivery |
-| 6 | 7 | Cloud code and recovery tooling | Agree budget; deploy and verify live integrations |
+| 6 | 7 | Cloud code, real S3/SES checks, recovery tooling | Resolve quotas; review/deploy the host; verify full live integrations |
 | 7 | 3 | Corpus, evaluator, demo | Held-out live benchmarks and customer walkthrough |
 
 The synthetic corpus contains 60 business documents, 20 scanned variants, five policies, and
@@ -21,6 +21,7 @@ stay in the same split. This corpus does not represent all supplier layouts.
 Release targets: 95% critical-field accuracy on held-out digital examples, 90% policy recall@5,
 zero incorrect automatic benchmark matches, valid citations, and passing workflow safety tests.
 Live outputs must establish these targets; fixture scores do not satisfy them.
+The [hardening report](hardening.md) lists the remaining release gates and completed reliability fixes.
 
 Extensions: cumulative partial invoicing, richer tax conventions, quotation ranking, agreement
 interpretation, public authentication, tenant isolation, and real-customer hardening.

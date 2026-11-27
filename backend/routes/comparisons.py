@@ -104,6 +104,16 @@ def create_comparison(payload: ComparisonRequest):
                 invoice.po_number
             ):
                 findings.append({"type": "multiple_invoices_for_po", "related_ids": [other["id"]]})
+        for label, revision in (("invoice", invoice_rev), ("purchase_order", po_rev)):
+            if revision["data"].get("issues"):
+                findings.append(
+                    {
+                        "type": "validation_required",
+                        "field": label,
+                        "issues": revision["data"]["issues"],
+                        "review_status": "open",
+                    }
+                )
         report = db.create(
             connection,
             "comparison",

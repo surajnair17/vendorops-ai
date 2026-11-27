@@ -28,8 +28,10 @@ REVIEWED_FILES = (
     "backend/Dockerfile",
     "backend/requirements.txt",
     "backend/requirements-cloud.txt",
+    "backend/requirements-lock.txt",
     "frontend/Dockerfile",
     "frontend/requirements.txt",
+    "frontend/requirements-lock.txt",
 )
 
 

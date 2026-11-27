@@ -86,6 +86,17 @@ def recover_expired(connection):
                     "message": "Worker lease expired; reconcile before any resend.",
                 },
             )
+            if job["data"].get("attempt_id"):
+                attempt = db.get(connection, job["data"]["attempt_id"], "delivery_attempt")
+                db.update(
+                    connection,
+                    attempt,
+                    {
+                        **attempt["data"],
+                        "state": "unknown",
+                        "error_code": "worker_lease_expired",
+                    },
+                )
             db.audit(connection, action["id"], "delivery_unknown")
 
 
@@ -121,12 +132,25 @@ def process_email_once(sender=None) -> bool:
             db.audit(connection, action["id"], "execution_blocked", {"code": error.code})
             return True
         action = db.update(connection, action, {**action["data"], "state": "sending"})
+        # Persist intent before the external call: a crash must not erase the attempt.
+        attempt = db.create(
+            connection,
+            "delivery_attempt",
+            {
+                "action_id": action["id"],
+                "job_id": job["id"],
+                "state": "sending",
+                "content_revision": action["data"]["content_revision"],
+                "delivery_mode": action["data"]["delivery_mode"],
+            },
+        )
         job = db.update(
             connection,
             job,
             {
                 **job["data"],
                 "status": "running",
+                "attempt_id": attempt["id"],
                 "lease_until": (datetime.now(UTC) + timedelta(minutes=5)).isoformat(),
             },
         )
@@ -149,15 +173,19 @@ def process_email_once(sender=None) -> bool:
     with db.transaction() as connection:
         action = db.get(connection, action["id"], "action")
         job = db.get(connection, job["id"], "job")
+        attempt = db.get(connection, attempt["id"], "delivery_attempt")
+        db.update(connection, attempt, {**attempt["data"], "state": state, **result})
         if job["data"]["status"] != "running":
             # Recovery may have marked a late response unknown; don't overwrite reconciliation.
+            db.update(connection, job, {**job["data"], "late_result": result})
+            db.audit(
+                connection,
+                action["id"],
+                "delivery_late_result",
+                {"attempt_id": attempt["id"], **result},
+            )
             return True
         db.update(connection, action, {**action["data"], "state": state, "delivery": result})
         db.update(connection, job, {**job["data"], "status": status, "result": result})
-        db.create(
-            connection,
-            "delivery_attempt",
-            {"action_id": action["id"], "job_id": job["id"], "state": state, **result},
-        )
         db.audit(connection, action["id"], f"delivery_{state}", result)
     return True

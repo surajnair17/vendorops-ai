@@ -44,6 +44,10 @@ def extract_structure(text: str, pages: list[str], provider=None) -> dict:
         if provider.mode == "bedrock"
         else text
     )
+    if len(provider_text) > settings.max_model_characters:
+        raise AppError(
+            413, "model_input_too_large", "Text and page labels exceed the model input budget."
+        )
     for attempt in range(2):
         try:
             raw = provider.extract(provider_text, repair=bool(attempt))

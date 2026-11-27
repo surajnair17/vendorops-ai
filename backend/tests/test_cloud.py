@@ -96,6 +96,14 @@ def test_ocr_pagination_preserves_digital_pages_and_deduplicates(client, monkeyp
         )
 
     class Textract:
+        def get_paginator(self, operation):
+            assert operation == "get_document_text_detection"
+            return self
+
+        def paginate(self, **kwargs):
+            yield self.get_document_text_detection(**kwargs)
+            yield self.get_document_text_detection(**kwargs, NextToken="page2")
+
         def get_document_text_detection(self, **kwargs):
             if "NextToken" not in kwargs:
                 return {

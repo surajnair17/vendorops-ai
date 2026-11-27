@@ -31,6 +31,11 @@ directory in the backend configuration and restart API and worker with the same 
 ## Back up and restore
 
 The backup command creates a consistent SQLite snapshot and copies every referenced source PDF.
+New backups use a version 2 manifest with SHA-256 for the database and each PDF. They are built
+in a temporary sibling directory and published only after completion. Restore verifies the manifest,
+SQLite integrity, the exact file list, and source hashes before publishing a fresh destination.
+Legacy version 1 backups remain readable with source-hash and database checks. These hashes detect
+corruption; they are not signatures against malicious rewriting. Keep backups private and trusted.
 Policy chunks, revisions, approvals, jobs, and audit events are in that database. The index is rebuilt
 from policy chunks; model secrets and `.env` files are deliberately outside the backup.
 
@@ -61,8 +66,9 @@ docker compose -f backend/infra/compose.yaml logs --tail 50 backend worker
 docker compose -f backend/infra/compose.yaml stop
 ```
 
-Host ports bind only to loopback. Backend and worker share a persistent volume; Chroma has its own
-volume. Never use `down --volumes` when you need to retain that data. For a container backup, run
+Host ports bind only to loopback. Backend and worker share a persistent volume, including policy
+vectors. The three containers drop capabilities, disallow privilege escalation, and have PID/memory
+limits. Never use `down --volumes` when you need to retain that data. For a container backup, run
 the backup module through `docker compose ... exec backend` and copy the result out with `docker
 compose ... cp`; Python paths inside the container are Linux paths. The frontend image installs
 only frontend dependencies.

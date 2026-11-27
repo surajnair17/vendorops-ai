@@ -1,7 +1,7 @@
 import hashlib
 import math
 import re
-from decimal import Decimal
+from decimal import Decimal, localcontext
 
 from backend import db
 from backend.config import settings
@@ -27,6 +27,7 @@ def chunks_for(pages: list[str]) -> list[dict]:
 
 
 def embedding(text: str, connection=None) -> list[float]:
+    require_vector_store()
     if settings.provider == "bedrock":
         from backend.services.cloud import embed_text
 
@@ -40,37 +41,26 @@ def embedding(text: str, connection=None) -> list[float]:
     return [value / norm for value in vector]
 
 
+def require_vector_store():
+    if settings.vector_store != "sqlite":
+        raise AppError(
+            422,
+            "unsupported_vector_store",
+            "Chroma is disabled after upstream security advisories. "
+            "Set VENDOROPS_VECTOR_STORE=sqlite and rebuild policy indexes.",
+        )
+
+
 def collection():
+    require_vector_store()
     name = f"policies-{settings.provider}-v1" + (
         "-" + hashlib.sha256(settings.embedding_model_id.encode()).hexdigest()[:12]
         if settings.provider == "bedrock"
         else ""
     )
-    if settings.vector_store == "sqlite":
-        from backend.services.vectors import SQLiteCollection
+    from backend.services.vectors import SQLiteCollection
 
-        return SQLiteCollection(name)
-    try:
-        import chromadb
-        from chromadb.config import Settings as ChromaSettings
-    except ImportError as error:
-        raise AppError(
-            503,
-            "vector_store_unavailable",
-            "Chroma could not load. Configure the SQLite vector store or repair its dependencies.",
-        ) from error
-
-    options = ChromaSettings(anonymized_telemetry=False)
-    client = (
-        chromadb.HttpClient(host=settings.chroma_host, port=settings.chroma_port, settings=options)
-        if settings.chroma_host
-        else chromadb.PersistentClient(path=str(settings.data_dir / "vectors"), settings=options)
-    )
-    return client.get_or_create_collection(
-        name,
-        embedding_function=None,
-        metadata={"hnsw:space": "cosine"},
-    )
+    return SQLiteCollection(name)
 
 
 def index_policy(policy: dict, vector_store=None):
@@ -173,12 +163,12 @@ def assess(connection, report: dict, query_vector=None) -> dict:
         if len({r["data"]["value"] for r in relevant}) == 1:
             expected, actual = Decimal(finding["expected"]), Decimal(finding["actual"])
             if expected > 0 and (kind != "quantity_overage_percent" or actual >= expected):
-                percent = abs(actual - expected) / expected * 100
-                outcome = (
-                    "within_tolerance"
-                    if percent <= Decimal(relevant[0]["data"]["value"])
-                    else "outside_tolerance"
-                )
+                with localcontext() as context:
+                    context.prec = 50
+                    within = abs(actual - expected) * 100 <= expected * Decimal(
+                        relevant[0]["data"]["value"]
+                    )
+                outcome = "within_tolerance" if within else "outside_tolerance"
         outcomes.append(
             {
                 "finding_index": index,

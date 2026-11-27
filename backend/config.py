@@ -10,6 +10,11 @@ class Settings(BaseSettings):
         env_prefix="VENDOROPS_", env_file=Path(__file__).parent / ".env", extra="ignore"
     )
     max_upload_bytes: int = Field(default=10 * 1024 * 1024, gt=0)
+    max_extracted_characters: int = Field(default=500_000, gt=0)
+    max_json_bytes: int = Field(default=512 * 1024, gt=0)
+    upload_timeout_seconds: float = Field(default=60, gt=0, le=300)
+    allowed_hosts: str = "127.0.0.1,localhost,::1,backend,testserver"
+    allowed_origins: str = "http://127.0.0.1:8501,http://localhost:8501"
     backend_url: str = "http://127.0.0.1:8000"
     request_timeout_seconds: float = Field(default=60, gt=0)
     data_dir: Path = Path(__file__).parent / "data"
@@ -41,7 +46,8 @@ class Settings(BaseSettings):
     storage_mode: Literal["local", "s3"] = "local"
     chroma_host: str = ""
     chroma_port: int = 8000
-    vector_store: Literal["chroma", "sqlite"] = "chroma"
+    # Accept legacy configuration only to return a clear migration error in retrieval.
+    vector_store: Literal["chroma", "sqlite"] = "sqlite"
 
 
 settings = Settings()

@@ -5,6 +5,10 @@
 Start the backend at `http://127.0.0.1:8000`. Browse the complete generated contract at
 [`/docs`](http://127.0.0.1:8000/docs) or download [`/openapi.json`](http://127.0.0.1:8000/openapi.json).
 The local PoC is intended for one operator on a private host.
+The request boundary rejects unconfigured hosts (`400`) and browser origins (`403`). JSON bodies
+default to 512 KiB; multipart requests allow the file limit plus 64 KiB of framing. Slow uploads
+return `408`, oversized requests return `413`, and all error responses carry a stable code/message.
+Every PDF route also enforces the configured page and extracted-text budgets before persistence.
 
 ## Check availability
 

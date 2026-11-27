@@ -12,7 +12,12 @@ def vector(values):
     result = [float(value) for value in values]
     if not result or not all(math.isfinite(value) for value in result):
         raise ValueError("Vectors must be nonempty and finite")
-    return result
+    scale = max(map(abs, result))
+    if not scale:
+        return result
+    scaled = [value / scale for value in result]
+    norm = math.sqrt(sum(value * value for value in scaled))
+    return [value / norm for value in scaled]
 
 
 class SQLiteCollection:
@@ -64,7 +69,12 @@ class SQLiteCollection:
             norm = math.sqrt(sum(value * value for value in query))
             scored = []
             for row in rows:
-                candidate = row["embedding"]
+                try:
+                    candidate = vector(row["embedding"])
+                except ValueError as error:
+                    raise AppError(
+                        409, "reindex_required", "Stored vectors are invalid; rebuild the index."
+                    ) from error
                 if len(candidate) != len(query):
                     raise AppError(
                         409, "reindex_required", "Rebuild policy vectors with this model."

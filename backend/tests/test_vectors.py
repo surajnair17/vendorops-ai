@@ -53,6 +53,21 @@ def test_invalid_vector_never_enters_the_index(client):
         assert db.all_records(connection, "policy_vector") == []
 
 
+def test_cosine_handles_extreme_finite_magnitudes_without_overflow(client):
+    store = SQLiteCollection("extreme")
+    store.upsert(
+        ids=["same", "orthogonal"],
+        documents=["same", "orthogonal"],
+        embeddings=[[1e300, 1e300], [1e300, -1e300]],
+        metadatas=[{"policy_id": "p"}, {"policy_id": "p"}],
+    )
+    result = store.query(
+        query_embeddings=[[1e-300, 1e-300]], n_results=2, where={"policy_id": {"$in": ["p"]}}
+    )
+    assert result["ids"] == [["same", "orthogonal"]]
+    assert result["distances"][0] == pytest.approx([0, 1])
+
+
 def test_switching_index_backend_requires_rebuild(client):
     from test_policies import seed_policy
 

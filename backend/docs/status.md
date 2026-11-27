@@ -4,7 +4,7 @@
 
 | Area | Latest observed result |
 | --- | --- |
-| Local tests | 118 Python tests and four Guard runner checks passed; Ruff lint and formatting passed |
+| Local tests | 150 Python tests passed; Ruff lint and formatting passed; four existing Guard checks remain in CI |
 | Browser walkthrough | [2 minute 18 second recording](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4), real local OCR, fixture AI, simulated email |
 | HTTP and frontend | Real-server upload/review smoke and actual Chrome walkthrough passed |
 | CI | Offline tests, Linux container build/startup, and the Guard advisory job passed for `0294db8` |
@@ -13,6 +13,7 @@
 | Recovery | Local backup restored both source PDFs and the sent action; restart did not resend |
 | Live S3 | Two real HTTP uploads, checksum checks, cloud backup/download, and restoration passed; test bucket and versions removed |
 | Cloud release | Host and live AI remain unverified; zero inference quotas block full completion |
+| Hardening | Request budgets, durable delivery attempts, verified backups, locked dependencies, and SQLite retrieval implemented; follow-up dependency audit has no known findings |
 
 The sections below retain milestone evidence. Older entries describe the state at their checkpoint;
 the current snapshot and latest live attempt take precedence when interpreting status.
@@ -24,6 +25,16 @@ and anchors resolved before the direct-download links replaced the repository's 
 The repository About description and topics now include quotation review
 and the recorded demo. Credentials, private documents, detailed run receipts, and runtime data
 remain excluded from Git.
+
+## Hardening pass
+
+- The [hardening report](hardening.md) records the code changes, Chroma advisory-driven migration,
+  failure regression tests, runtime checks, learning exercise, and remaining release gates.
+- The native runtime check completed four documents with real PDF parsing and Tesseract, fixture
+  extraction/retrieval, a quotation assessment, and one approved simulated send through a separate
+  worker. It made no paid calls. Linux CI now runs the same workflow in actual Compose containers.
+- A fresh read-only AWS check confirms the Free plan and authorized model access, but all five
+  Nova/Titan quotas remain zero. No inference, email, or resource creation was attempted in this pass.
 
 ## AWS deployment checks
 

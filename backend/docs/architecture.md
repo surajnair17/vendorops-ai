@@ -8,7 +8,7 @@ flowchart LR
   A --> D[(SQLite snapshots)]
   A --> M[Fixture / Bedrock]
   A --> C[Python comparison]
-  A --> R[Chroma / SQLite vector retrieval]
+  A --> R[SQLite vector retrieval]
   R --> E[Fixture / Titan embeddings]
   C --> H[Confirmed rules]
   H --> V[Review and approval]
@@ -31,8 +31,8 @@ flowchart LR
   need an explicit one-to-one mapping. Supplier aliases require human confirmation.
 - Fixture embeddings hash words and are labelled lexical plumbing, not semantic accuracy.
   Real Titan embeddings use a separate collection; switching providers requires reindexing.
-- Chroma remains the default policy index. Set `VENDOROPS_VECTOR_STORE=sqlite` for a small local
-  corpus when native Chroma dependencies cannot load. This stores vectors in the existing database
+- SQLite is the supported policy index; Chroma was removed after upstream security advisories.
+  This stores vectors in the existing database
   and performs exact cosine search with active-policy filtering. It supports either fixture or
   Titan embeddings; selecting SQLite does not turn fixtures into semantic embeddings. Changing
   the index backend requires rebuilding active policies. This linear scan is intended for the PoC.
@@ -40,6 +40,8 @@ flowchart LR
   Conflicts abstain; tolerances never delete the observed numerical difference.
 - Editing an action clears approval. One durable outbox job prevents duplicate button-click sends.
   Uncertain delivery is reconciled by a human; SES acceptance is not proof of inbox arrival.
+  Delivery intent commits before the provider call. Lease recovery preserves the attempt, and a
+  late response remains in its history without overwriting reconciliation or triggering a resend.
 - The deployment is one private host and one operator. No public authentication, tenant isolation,
   high availability, payment processing, or compliance certification is claimed.
 - The Free-plan deployment uses a regional Nova Lite model and local Tesseract for scans. Textract,

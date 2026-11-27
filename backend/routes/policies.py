@@ -1,14 +1,14 @@
 from datetime import date
-from decimal import Decimal, InvalidOperation
 from typing import Literal
 
 from fastapi import APIRouter, UploadFile
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from backend import db
 from backend.config import settings
 from backend.errors import AppError
 from backend.routes.documents import read_pdf_upload
+from backend.schemas.business import Number
 from backend.services.comparison import report_is_stale
 from backend.services.pdf_extractor import extract_pages
 from backend.services.policies import (
@@ -136,7 +136,7 @@ class RuleInput(BaseModel):
         "required_field",
         "invoice_value_threshold",
     ]
-    value: str
+    value: str = Field(min_length=1, max_length=64)
     currency: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
 
 
@@ -156,12 +156,12 @@ def create_rule(payload: RuleInput):
             raise AppError(422, "unsupported_field", "Select a supported required field.")
     else:
         try:
-            number = Decimal(payload.value)
-            if not number.is_finite() or number < 0:
-                raise InvalidOperation
-        except InvalidOperation as error:
+            number = TypeAdapter(Number).validate_python(payload.value)
+        except ValidationError as error:
             raise AppError(
-                422, "invalid_threshold", "Use a nonnegative finite threshold."
+                422,
+                "invalid_threshold",
+                "Use a nonnegative threshold with at most 18 digits and 6 decimal places.",
             ) from error
         # Canonical values keep equivalent thresholds (10 and 10.0) from conflicting.
         payload.value = format(number.normalize(), "f")

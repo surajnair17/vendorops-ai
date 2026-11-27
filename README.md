@@ -27,7 +27,7 @@ retain their evidence and require approval of the exact content before execution
 **Run the local demo without AWS credentials.** It uses synthetic documents, deterministic extraction
 fixtures, local storage, and simulated email. Live services and real sending are disabled by default.
 
-**Verified November 28, 2026:** [118 Python tests and four Guard runner checks](backend/docs/status.md),
+**Verified November 28, 2026:** [150 Python tests and four Guard runner checks](backend/docs/status.md),
 a completed local browser walkthrough, **live S3 upload and recovery checks**, and one approved
 **real SES email received in Gmail Spam**. The temporary S3 resources were removed after verification.
 [Live verification](backend/docs/live-verification.md) separates these results from the blocked AI and deployment checks.
@@ -103,6 +103,7 @@ Create an environment and install the application and test dependencies:
 
 ```powershell
 python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --require-hashes -r backend/requirements-lock.txt -r frontend/requirements-lock.txt
 .\.venv\Scripts\python.exe -m pip install -r backend/requirements-dev.txt -r backend/requirements-cloud.txt -r frontend/requirements-dev.txt
 Copy-Item backend/.env.example backend/.env
 Copy-Item frontend/.env.example frontend/.env
@@ -131,6 +132,7 @@ Copy configuration files only on first setup; preserve an existing `.env`.
 
 ```bash
 python3.13 -m venv .venv
+.venv/bin/python -m pip install --require-hashes -r backend/requirements-lock.txt -r frontend/requirements-lock.txt
 .venv/bin/python -m pip install -r backend/requirements-dev.txt -r backend/requirements-cloud.txt -r frontend/requirements-dev.txt
 cp -n backend/.env.example backend/.env
 cp -n frontend/.env.example frontend/.env
@@ -186,9 +188,9 @@ upload offers **Read scanned PDF with local OCR**; this separate action saves a 
 shows the recognized text after refreshing job status. The **Extract Text** operation and its
 stateless API still return `no_text` for an image-only document.
 
-If Windows blocks a native Chroma dependency, set `VENDOROPS_VECTOR_STORE=sqlite` in
-`backend/.env`. This uses exact cosine retrieval over vectors in SQLite for the small local corpus.
-Rebuild existing policy indexes after switching backends. [Index design](backend/docs/architecture.md).
+Policy retrieval uses exact cosine search in SQLite. Chroma was removed after unpatched upstream
+security advisories; existing installations should set `VENDOROPS_VECTOR_STORE=sqlite`, uninstall
+`chromadb`, and rebuild policy indexes. [Hardening and migration](backend/docs/hardening.md).
 
 The backend container includes Tesseract. After creating `backend/.env`, an alternative local start is:
 
@@ -196,7 +198,7 @@ The backend container includes Tesseract. After creating `backend/.env`, an alte
 docker compose -f backend/infra/compose.yaml up --build -d
 ```
 
-This starts the API, frontend, worker, and Chroma. See the [operations guide](backend/docs/operations.md)
+This starts the API, frontend, and worker. See the [operations guide](backend/docs/operations.md)
 for stop, backup, and restore commands. Container builds and startup are checked by Linux CI.
 
 ## How it works
@@ -222,7 +224,7 @@ flowchart LR
 | Documents | PyMuPDF, Tesseract | Digital text and local scanned-page OCR |
 | Business logic | Python, `Decimal` | Matching, arithmetic, confirmed policy rules |
 | Persistence | SQLite, SQLAlchemy | Revisioned records, audit events, durable jobs |
-| Retrieval | Chroma or local SQLite cosine search | Policy passage retrieval with stored citations |
+| Retrieval | SQLite cosine search | Policy passage retrieval with stored citations |
 | Optional cloud adapters | Bedrock, Titan, S3, SES, Textract | Live extraction, embeddings, storage, email, cloud OCR |
 
 Fixture extraction recognizes exact generated examples; it does not invent records for unknown
@@ -295,6 +297,8 @@ This is a **single-company, single-operator portfolio PoC**. It supports English
 currency per document. Public access, multiple tenants, payment execution, ERP integration, currency
 conversion, and cumulative partial-invoice accounting are outside this release.
 Read the [verification record](backend/docs/status.md) before interpreting benchmark claims.
+The [hardening report](backend/docs/hardening.md) covers request limits, crash recovery, verified
+dependency locks, security checks, and the remaining release gates.
 
 **Current cloud blocker:** sign-in and model access were verified in `ap-southeast-2`, but applied
 Nova Lite and Titan inference quotas were zero. Three runtime attempts were throttled. A read-only

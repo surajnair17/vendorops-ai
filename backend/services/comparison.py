@@ -1,6 +1,8 @@
 import re
 from decimal import ROUND_HALF_UP, Decimal, localcontext
 
+from pydantic import ValidationError
+
 from backend import db
 from backend.errors import AppError
 from backend.schemas.business import BusinessDocument
@@ -17,7 +19,15 @@ def current_business(connection, identifier: str):
     revision = db.get(connection, document["data"]["revision_id"], "revision")
     if not revision["data"]["structured"]:
         raise AppError(422, "structure_required", "No valid structured record is available.")
-    return document, revision, BusinessDocument.model_validate(revision["data"]["structured"])
+    try:
+        structured = BusinessDocument.model_validate(revision["data"]["structured"])
+    except ValidationError as error:
+        raise AppError(
+            422,
+            "structured_review_required",
+            "Stored fields no longer pass validation. Review and save a corrected revision.",
+        ) from error
+    return document, revision, structured
 
 
 def supplier_key(connection, name: str | None) -> str:
@@ -30,7 +40,7 @@ def supplier_key(connection, name: str | None) -> str:
 
 
 def match_candidates(connection, identifier: str) -> dict:
-    _, _, invoice = current_business(connection, identifier)
+    _, invoice_revision, invoice = current_business(connection, identifier)
     if invoice.document_type != "invoice":
         raise AppError(422, "invoice_required", "Select an invoice to find a purchase order.")
     candidates = []
@@ -60,9 +70,12 @@ def match_candidates(connection, identifier: str) -> dict:
                 "supplier": order.supplier,
                 "exact_match": exact,
                 "supplier_match": supplier_match,
+                "review_required": bool(
+                    invoice_revision["data"].get("issues") or revision["data"].get("issues")
+                ),
             }
         )
-    exact = [c for c in candidates if c["exact_match"]]
+    exact = [c for c in candidates if c["exact_match"] and not c["review_required"]]
     return {
         "candidates": candidates,
         "automatic_match": exact[0]["document_id"] if len(exact) == 1 else None,

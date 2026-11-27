@@ -149,6 +149,31 @@ def test_cross_region_configuration_is_rejected_before_sdk_or_usage(client, monk
         assert not db.all_records(connection, "usage")
 
 
+@pytest.mark.parametrize(
+    "identifier",
+    [
+        "apac.amazon.nova-lite-v1:0",
+        "global.amazon.nova-lite-v1:0",
+        "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-lite-v1:0",
+        "arn:aws:bedrock:ap-southeast-2:123456789012:inference-profile/apac.amazon.nova-lite-v1:0",
+    ],
+)
+def test_model_references_cannot_bypass_the_region_boundary(client, monkeypatch, identifier):
+    monkeypatch.setattr(settings, "live_calls_enabled", True)
+    monkeypatch.setattr(settings, "approved_monthly_budget_usd", 10)
+    monkeypatch.setattr(settings, "model_id", identifier)
+
+    def unexpected(*args, **kwargs):
+        raise AssertionError("Invalid model reference must not create an SDK client")
+
+    monkeypatch.setattr("backend.services.cloud.aws_client", unexpected)
+    with pytest.raises(AppError) as error:
+        converse("Extract", "Synthetic")
+    assert error.value.code == "regional_model_required"
+    with db.transaction() as connection:
+        assert not db.all_records(connection, "usage")
+
+
 @pytest.mark.parametrize("operation", ["converse", "invoke_model"])
 def test_throttling_explains_quota_block_and_counts_attempt_without_retry(
     client, monkeypatch, operation

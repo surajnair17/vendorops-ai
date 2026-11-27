@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "verification_date": "2026-11-28",
+  "date_timezone": "Asia/Kolkata",
+  "scope": "private single-operator PoC hardening; synthetic documents",
+  "python_tests_passed": 150,
+  "ruff_lint_passed": true,
+  "ruff_format_passed": true,
+  "dependency_audit": {
+    "source": "pip-audit 2.10.1, strict local environment scan",
+    "packages_scanned": 136,
+    "known_findings": 0,
+    "chroma_removed_from_supported_runtime": true
+  },
+  "runtime_check": {
+    "status": "passed",
+    "documents": 4,
+    "pdf": "real",
+    "ocr": "local_tesseract",
+    "structured_extraction": "fixture",
+    "policy_retrieval": "fixture_lexical_sqlite",
+    "email": "simulated",
+    "delivery_attempts": 1,
+    "paid_calls": 0
+  },
+  "browser": {
+    "actual_chrome_walkthrough_passed": true,
+    "mobile_390px_passed": true
+  },
+  "github_security": {
+    "repository_public": true,
+    "dependency_alerts_enabled": true,
+    "private_vulnerability_reporting_enabled": true,
+    "secret_scanning": "enabled",
+    "push_protection": "enabled"
+  },
+  "fixture_evaluation": {
+    "digital_documents": 60,
+    "model_mode": "fixture_plumbing_only",
+    "retrieval_queries": 5,
+    "retrieval_mode": "fixture_lexical_only",
+    "live_model_accuracy_established": false
+  },
+  "ocr_evaluation": {
+    "provider": "local_tesseract",
+    "split": "test",
+    "include_scans": true,
+    "document_count": 5,
+    "failed_documents": 0,
+    "reference_characters_scored": 1120,
+    "character_error_rate_completed_only": 0.0,
+    "normalization": "Collapse whitespace; keep case/punctuation; exact Levenshtein distance.",
+    "limitation": "Synthetic scans only; failures reported separately; no model accuracy claim"
+  },
+  "aws": {
+    "region": "ap-southeast-2",
+    "free_plan_verified": true,
+    "model_access_authorized": true,
+    "zero_quotas": 5,
+    "inference_calls_this_pass": 0,
+    "email_sends_this_pass": 0,
+    "resources_provisioned_this_pass": 0,
+    "support_case_submitted": false
+  },
+  "full_live_release_complete": false,
+  "private_receipts_excluded": true
+}

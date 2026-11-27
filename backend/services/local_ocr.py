@@ -107,7 +107,7 @@ def process_local_ocr_once() -> bool:
         )
     try:
         pages = recognize_pages(Path(document["data"]["source"]), document["data"]["pages"])
-    except (AppError, OSError) as error:
+    except (AppError, OSError, RuntimeError, ValueError) as error:
         with db.transaction() as connection:
             current = db.get(connection, job["id"], "job")
             db.update(

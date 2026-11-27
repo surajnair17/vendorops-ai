@@ -16,6 +16,8 @@ Run from the repository root:
 Settings come from backend/.env; environment variables take precedence. Runtime data defaults
 to backend/data. requirements-cloud.txt adds boto3; requirements-dev.txt adds testing tools.
 No AWS client is created during import.
+Production dependency versions and hashes are in `requirements-lock.txt`; Docker and CI install
+that checked set. SQLite handles the policy index. See [hardening and migration](docs/hardening.md).
 Local OCR uses a separately installed Tesseract executable (`VENDOROPS_TESSERACT_COMMAND`); the
 backend container includes it. Deployment and local-login instructions are in [AWS setup](docs/aws-setup.md).
 
@@ -24,6 +26,7 @@ backend container includes it. Deployment and local-login instructions are in [A
 | Path | Responsibility |
 | --- | --- |
 | `main.py` | FastAPI composition, error handling, and request metrics |
+| `middleware.py` | Host/origin validation, bounded request bodies, and private response headers |
 | `config.py` | Typed settings and live-service defaults |
 | `db.py`, `migrations/` | Transactions, snapshots, and schema versions |
 | `routes/` | Endpoints grouped by business capability |

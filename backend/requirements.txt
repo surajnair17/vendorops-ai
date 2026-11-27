@@ -6,4 +6,3 @@ python-multipart>=0.0.20,<1
 PyMuPDF>=1.25,<2
 httpx>=0.28,<1
 SQLAlchemy>=2.0,<3
-chromadb>=1.0,<2

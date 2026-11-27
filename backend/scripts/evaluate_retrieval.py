@@ -8,11 +8,17 @@ from sqlalchemy import create_engine
 
 from backend import db
 from backend.config import settings
-from backend.services.policies import chunks_for, embedding, index_policy, retrieve
+from backend.services.policies import (
+    chunks_for,
+    embedding,
+    index_policy,
+    require_vector_store,
+    retrieve,
+)
 
 
 def evaluate(policies: list[dict], queries: list[dict]) -> dict:
-    store = None
+    require_vector_store()
     engine = create_engine("sqlite://")
     hits1 = hits5 = relevant_total = supported = returned = 0
     details = []
@@ -22,22 +28,9 @@ def evaluate(policies: list[dict], queries: list[dict]) -> dict:
                 "CREATE TABLE records (id TEXT PRIMARY KEY, kind TEXT, "
                 "version INTEGER, data TEXT, created_at TEXT, updated_at TEXT)"
             )
-            if settings.vector_store == "sqlite":
-                from backend.services.vectors import SQLiteCollection
+            from backend.services.vectors import SQLiteCollection
 
-                vector_store = SQLiteCollection("retrieval-benchmark", connection)
-            else:
-                import chromadb
-                from chromadb.config import Settings as ChromaSettings
-
-                store = chromadb.EphemeralClient(
-                    settings=ChromaSettings(anonymized_telemetry=False)
-                )
-                vector_store = store.create_collection(
-                    "retrieval-benchmark",
-                    embedding_function=None,
-                    metadata={"hnsw:space": "cosine"},
-                )
+            vector_store = SQLiteCollection("retrieval-benchmark", connection)
             for policy in policies:
                 record = db.create(
                     connection,
@@ -73,8 +66,6 @@ def evaluate(policies: list[dict], queries: list[dict]) -> dict:
                 )
     finally:
         engine.dispose()
-        if store is not None:
-            store.delete_collection("retrieval-benchmark")
     return {
         "mode": "live_embeddings" if settings.provider == "bedrock" else "fixture_lexical_only",
         "vector_store": settings.vector_store,

@@ -36,6 +36,7 @@ For development, start with the quick start and the backend/frontend guides.
 | [Operations](operations.md) | Start/stop, durable jobs, containers, backup, restore, and recovery |
 | [AWS setup](aws-setup.md) | Optional private deployment and separate live-service checks |
 | [Live verification](live-verification.md) | Actual S3 uploads/recovery/cleanup, SES delivery, sanitized evidence, and remaining AWS blockers |
+| [Hardening](hardening.md) | Request limits, crash/backup recovery, dependency migration, checked installs, and release gates |
 | [Infrastructure checks](infrastructure-checks.md) | Reproduce AWS Guard validation and review its findings |
 | [Cost worksheet](costs.md) | Hosting assumptions, service usage, and spending controls |
 | [Contributing](../../.github/CONTRIBUTING.md) | Change boundaries, checks, and pull requests |

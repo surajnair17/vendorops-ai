@@ -6,13 +6,16 @@ services:
     env_file: ../.env
     environment:
       VENDOROPS_DATA_DIR: /data
-      VENDOROPS_CHROMA_HOST: chroma
+      VENDOROPS_VECTOR_STORE: sqlite
     volumes:
       - app-data:/data
     ports:
       - "127.0.0.1:8000:8000"
-    depends_on:
-      - chroma
+    init: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 384m
     restart: unless-stopped
     healthcheck:
       test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
@@ -20,6 +23,11 @@ services:
       timeout: 5s
       retries: 3
   frontend:
+    init: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 256m
     build:
       context: ../..
       dockerfile: frontend/Dockerfile
@@ -32,6 +40,11 @@ services:
       - backend
     restart: unless-stopped
   worker:
+    init: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 512m
     build:
       context: ../..
       dockerfile: backend/Dockerfile
@@ -39,19 +52,9 @@ services:
     env_file: ../.env
     environment:
       VENDOROPS_DATA_DIR: /data
+      VENDOROPS_VECTOR_STORE: sqlite
     volumes:
       - app-data:/data
     restart: unless-stopped
-  chroma:
-    build:
-      context: ../..
-      dockerfile: backend/Dockerfile
-    command: [chroma, run, --host, 0.0.0.0, --port, "8000", --path, /data/chroma]
-    environment:
-      ANONYMIZED_TELEMETRY: "FALSE"
-    volumes:
-      - vector-data:/data
-    restart: unless-stopped
 volumes:
   app-data:
-  vector-data:

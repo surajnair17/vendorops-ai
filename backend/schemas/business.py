@@ -11,35 +11,36 @@ SCHEMA_VERSION = 2
 
 
 class Evidence(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     page: int = Field(ge=1)
-    quote: str = Field(min_length=1)
+    quote: str = Field(min_length=1, max_length=10000)
 
 
 class LineItem(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    item_id: str | None = None
-    description: str
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    item_id: str | None = Field(default=None, min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=2000)
     quantity: Number | None = None
-    unit: str | None = None
+    unit: str | None = Field(default=None, min_length=1, max_length=100)
     unit_price: Number | None = None
     discount: Number | None = None
     tax: Number | None = None
     taxable: bool | None = None
     total: Number | None = None
-    evidence: list[Evidence] = Field(default_factory=list)
+    evidence: list[Evidence] = Field(default_factory=list, max_length=50)
 
 
 class BusinessDocument(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     document_type: Literal["invoice", "purchase_order", "quotation"]
-    supplier: str | None = None
-    document_number: str | None = None
+    supplier: str | None = Field(default=None, min_length=1, max_length=300)
+    document_number: str | None = Field(default=None, min_length=1, max_length=200)
     document_date: date | None = None
     valid_until: date | None = Field(default=None, description="Explicit quotation expiry date")
-    payment_terms: str | None = Field(default=None, min_length=1)
-    po_number: str | None = None
+    payment_terms: str | None = Field(default=None, min_length=1, max_length=2000)
+    po_number: str | None = Field(default=None, min_length=1, max_length=200)
     currency: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
-    items: list[LineItem] = Field(default_factory=list)
+    items: list[LineItem] = Field(default_factory=list, max_length=500)
     subtotal: Number | None = None
     discount: Number | None = None
     tax: Number | None = None

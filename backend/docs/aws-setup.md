@@ -146,7 +146,7 @@ Only after the deployment record and allowance have been agreed, use its exact d
 Deploy creates a new CloudFormation stack; it does not silently update an existing stack. It repeats
 preflight and requests IAM capability. Boot installs Docker and checksum-verified pinned Compose,
 checks out the selected public Git commit, creates runtime configuration from stack resources, and
-starts the four containers. CloudFormation waits for a successful bootstrap signal; inspect events
+starts the three containers. CloudFormation waits for a successful bootstrap signal; inspect events
 and `/var/log/cloud-init-output.log` if bootstrap fails. A rolled-back stack can retain encrypted EBS;
 review retained resources and costs after any failure.
 

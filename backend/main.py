@@ -5,8 +5,10 @@ from time import perf_counter
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException
 
 from backend.errors import AppError
+from backend.middleware import RequestBoundaryMiddleware
 from backend.routes.actions import router as actions_router
 from backend.routes.comparisons import router as comparisons_router
 from backend.routes.documents import router
@@ -81,6 +83,22 @@ async def unexpected_error(request: Request, error: Exception) -> JSONResponse:
     )
 
 
+@app.exception_handler(HTTPException)
+async def http_error(request: Request, error: HTTPException) -> JSONResponse:
+    code, message = {
+        404: ("not_found", "The requested endpoint does not exist."),
+        405: ("method_not_allowed", "This HTTP method is not allowed for the endpoint."),
+    }.get(error.status_code, ("http_error", "The HTTP request could not be completed."))
+    return JSONResponse(
+        status_code=error.status_code,
+        content={"error": {"code": code, "message": message}},
+        headers=error.headers,
+    )
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+app.add_middleware(RequestBoundaryMiddleware)
