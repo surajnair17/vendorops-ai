@@ -8,27 +8,41 @@ import argparse
 import hashlib
 import json
 import re
+import subprocess
 from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from backend.scripts.check_bedrock import check as check_bedrock
+
 ROOT = Path(__file__).resolve().parents[2]
 TEMPLATE = ROOT / "backend/infra/cloudformation.yaml"
 BOOTSTRAP = ROOT / "backend/infra/bootstrap.sh"
+REVIEWED_FILES = (
+    "backend/infra/cloudformation.yaml",
+    "backend/infra/bootstrap.sh",
+    "backend/infra/compose.yaml",
+    "backend/infra/compose.aws.yaml",
+    "backend/Dockerfile",
+    "backend/requirements.txt",
+    "backend/requirements-cloud.txt",
+    "frontend/Dockerfile",
+    "frontend/requirements.txt",
+)
 
 
 class Deployment(BaseModel):
     model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
     profile: str = "pixel-perfect"
     account_id: str = ""
-    region: str = Field(default="us-east-1", pattern=r"^[a-z]{2}(?:-[a-z]+)+-\d$")
-    bedrock_region: str = Field(default="us-east-1", pattern=r"^[a-z]{2}(?:-[a-z]+)+-\d$")
-    pricing_region: str = "us-east-1"
+    region: str = Field(default="ap-southeast-2", pattern=r"^[a-z]{2}(?:-[a-z]+)+-\d$")
+    bedrock_region: str = Field(default="ap-southeast-2", pattern=r"^[a-z]{2}(?:-[a-z]+)+-\d$")
+    pricing_region: str = ""
     pricing_instance_type: str = "t3.small"
-    ec2_hourly_usd: Decimal = Field(default=Decimal("0.0209"), gt=0)
-    gp3_gb_month_usd: Decimal = Field(default=Decimal("0.08"), gt=0)
+    ec2_hourly_usd: Decimal | None = Field(default=None, gt=0)
+    gp3_gb_month_usd: Decimal | None = Field(default=None, gt=0)
     account_plan: Literal["free", "paid"] = "free"
     credits_available_usd: Decimal = Field(default=Decimal(0), ge=0)
     monthly_usage_budget_usd: Decimal = Field(default=Decimal(0), ge=0)
@@ -46,6 +60,8 @@ class Deployment(BaseModel):
 
     @model_validator(mode="after")
     def free_plan_features(self):
+        if self.bedrock_region != self.region:
+            raise ValueError("Bedrock must use the selected project Region.")
         if self.account_plan == "free" and self.enable_textract:
             raise ValueError("Textract requires the Paid plan. Keep local OCR on the Free plan.")
         if self.account_plan == "free" and self.instance_type != "t3.small":
@@ -61,10 +77,12 @@ class Deployment(BaseModel):
 
 
 def plan(config: Deployment) -> dict:
-    hosting = (
-        (config.ec2_hourly_usd + Decimal("0.005")) * config.demo_running_hours
-        + config.gp3_gb_month_usd * 30
-    ).quantize(Decimal("0.01"))
+    hosting = None
+    if config.ec2_hourly_usd is not None and config.gp3_gb_month_usd is not None:
+        hosting = (
+            (config.ec2_hourly_usd + Decimal("0.005")) * config.demo_running_hours
+            + config.gp3_gb_month_usd * 30
+        ).quantize(Decimal("0.01"))
     missing = [
         key
         for key in (
@@ -79,6 +97,10 @@ def plan(config: Deployment) -> dict:
         if not getattr(config, key)
     ]
     blockers = [f"Missing {key}" for key in missing]
+    if hosting is None:
+        blockers.append("Enter verified regional EC2 and gp3 prices before approval")
+    if config.bedrock_region != config.region:
+        blockers.append("Bedrock must use the selected project Region")
     if config.pricing_region != config.region:
         blockers.append("Verify regional EC2/EBS rates and update pricing_region before approval")
     if config.pricing_instance_type != config.instance_type:
@@ -87,7 +109,7 @@ def plan(config: Deployment) -> dict:
         blockers.append("account_id must have 12 digits")
     if config.release_commit and not re.fullmatch(r"[a-f0-9]{40}", config.release_commit):
         blockers.append("release_commit must be a full Git commit")
-    if config.monthly_usage_budget_usd < hosting + Decimal("1"):
+    if hosting is not None and config.monthly_usage_budget_usd < hosting + Decimal("1"):
         blockers.append("Approve a usage allowance covering hosting plus at least $1 for services")
     if config.monthly_usage_budget_usd > (
         config.credits_available_usd + config.maximum_out_of_pocket_usd
@@ -101,7 +123,10 @@ def plan(config: Deployment) -> dict:
         "configuration": config.model_dump(mode="json"),
         "template_sha256": hashlib.sha256(TEMPLATE.read_bytes()).hexdigest(),
         "bootstrap_sha256": hashlib.sha256(BOOTSTRAP.read_bytes()).hexdigest(),
-        "estimated_hosting_usd": str(hosting),
+        "artifact_sha256": {
+            path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in REVIEWED_FILES
+        },
+        "estimated_hosting_usd": str(hosting) if hosting is not None else None,
         "estimate_note": (
             "Compute + IPv4 for selected hours; 30GB storage for one month. Other usage extra."
         ),
@@ -128,11 +153,14 @@ def session_for(config: Deployment):
 
     session = boto3.Session(profile_name=config.profile or None, region_name=config.region)
     options = Config(connect_timeout=5, read_timeout=15, retries={"total_max_attempts": 1})
-    return lambda name: session.client(
-        name,
-        region_name=config.bedrock_region if name == "bedrock" else config.region,
-        config=options,
-    )
+    clients = {}
+
+    def client(name):
+        if name not in clients:
+            clients[name] = session.client(name, region_name=config.region, config=options)
+        return clients[name]
+
+    return client
 
 
 def check(config: Deployment, client_factory=None) -> dict:
@@ -155,18 +183,30 @@ def check(config: Deployment, client_factory=None) -> dict:
         }
     checks.append(
         {
-            "name": "account",
+            "name": "project",
             "status": "pass" if identity["Account"] == config.account_id else "blocked",
-            "account_id": identity["Account"],
         }
     )
     checks.append(
         {
             "name": "operator",
             "status": "blocked" if identity["Arn"].endswith(":root") else "pass",
-            "note": "Use an IAM or federated operator for deployment.",
+            "note": "Use the signed-in project team member or a federated operator.",
         }
     )
+    if any(row["status"] == "blocked" for row in checks):
+        return {"ready": False, "checks": checks, "configuration_blockers": reviewed["blockers"]}
+
+    readiness = check_bedrock(
+        profile=config.profile,
+        region=config.region,
+        expected_project_id=config.account_id,
+        client_factory=client,
+        expected_plan=config.account_plan.upper(),
+    )
+    checks.extend(readiness["checks"])
+    if any(row["status"] == "blocked" for row in checks if row["name"] in {"identity", "plan"}):
+        return {"ready": False, "checks": checks, "configuration_blockers": reviewed["blockers"]}
 
     def inspect(name, operation):
         try:
@@ -202,19 +242,6 @@ def check(config: Deployment, client_factory=None) -> dict:
         return "VPC matches; outbound Internet Gateway route exists; no public inbound ports"
 
     inspect("network", subnet)
-    for model in ("amazon.nova-lite-v1:0", "amazon.titan-embed-text-v2:0"):
-
-        def model_check(identifier=model):
-            detail = client("bedrock").get_foundation_model(modelIdentifier=identifier)[
-                "modelDetails"
-            ]
-            if "ON_DEMAND" not in detail.get("inferenceTypesSupported", []):
-                raise ValueError("regional_on_demand_unavailable")
-            if detail.get("modelLifecycle", {}).get("status") != "ACTIVE":
-                raise ValueError("model_not_active")
-            return "Regional model listed; actual invocation authorization remains a live check"
-
-        inspect(model, model_check)
     for address in sorted({config.sender_email, config.recipient_email}):
 
         def identity_check(email=address):
@@ -238,6 +265,32 @@ def error_code(error: Exception) -> str:
     return str(error) if isinstance(error, ValueError) else type(error).__name__
 
 
+def verify_release(config: Deployment):
+    """The host checks out this commit, so its runtime files must match the reviewed files."""
+    for path in REVIEWED_FILES:
+        result = subprocess.run(
+            [
+                "git",
+                "-c",
+                f"safe.directory={ROOT.as_posix()}",
+                "-C",
+                str(ROOT),
+                "show",
+                f"{config.release_commit}:{path}",
+            ],
+            capture_output=True,
+            check=False,
+            timeout=15,
+        )
+        committed = result.stdout.decode("utf-8", errors="replace").replace("\r\n", "\n")
+        current = (ROOT / path).read_text(encoding="utf-8")
+        if result.returncode or committed != current:
+            raise ValueError(
+                f"The release does not match reviewed {path}. Commit and push the reviewed "
+                "files, update release_commit, and review the new plan."
+            )
+
+
 def deploy(config: Deployment, review_sha256: str, client_factory=None) -> dict:
     reviewed = plan(config)
     if reviewed["blockers"] or review_sha256 != reviewed["review_sha256"]:
@@ -246,6 +299,7 @@ def deploy(config: Deployment, review_sha256: str, client_factory=None) -> dict:
     readiness = check(config, client)
     if not readiness["ready"]:
         raise ValueError("AWS preflight did not pass; run check to inspect blockers")
+    verify_release(config)
     parameters = {
         "VpcId": config.vpc_id,
         "PublicSubnetId": config.subnet_id,

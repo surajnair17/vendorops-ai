@@ -115,7 +115,7 @@ def test_local_sdk_calls_use_the_selected_login_profile_and_resource_region(clie
     monkeypatch.setattr(settings, "approved_monthly_budget_usd", 10)
     monkeypatch.setattr(settings, "aws_profile", "pixel-perfect")
     monkeypatch.setattr(settings, "aws_region", "ap-southeast-2")
-    monkeypatch.setattr(settings, "bedrock_region", "us-east-1")
+    monkeypatch.setattr(settings, "bedrock_region", "ap-southeast-2")
     clients = []
 
     class Session:
@@ -128,4 +128,54 @@ def test_local_sdk_calls_use_the_selected_login_profile_and_resource_region(clie
     monkeypatch.setattr(boto3, "Session", Session)
     aws_client("s3")
     aws_client("bedrock-runtime")
-    assert clients == [("s3", "ap-southeast-2"), ("bedrock-runtime", "us-east-1")]
+    assert clients == [("s3", "ap-southeast-2"), ("bedrock-runtime", "ap-southeast-2")]
+
+
+def test_cross_region_configuration_is_rejected_before_sdk_or_usage(client, monkeypatch):
+    monkeypatch.setattr(settings, "live_calls_enabled", True)
+    monkeypatch.setattr(settings, "approved_monthly_budget_usd", 10)
+    monkeypatch.setattr(settings, "aws_region", "ap-southeast-2")
+    monkeypatch.setattr(settings, "bedrock_region", "us-east-1")
+
+    def unexpected(*args, **kwargs):
+        raise AssertionError("A mismatched Region must not create an AWS session")
+
+    monkeypatch.setattr(boto3, "Session", unexpected)
+    for operation in (lambda: aws_client("s3"), lambda: converse("Extract", "Synthetic")):
+        with pytest.raises(AppError) as error:
+            operation()
+        assert error.value.code == "region_mismatch"
+    with db.transaction() as connection:
+        assert not db.all_records(connection, "usage")
+
+
+@pytest.mark.parametrize("operation", ["converse", "invoke_model"])
+def test_throttling_explains_quota_block_and_counts_attempt_without_retry(
+    client, monkeypatch, operation
+):
+    monkeypatch.setattr(settings, "live_calls_enabled", True)
+    monkeypatch.setattr(settings, "approved_monthly_budget_usd", 10)
+    runtime = boto3.client(
+        "bedrock-runtime",
+        region_name="ap-southeast-2",
+        aws_access_key_id="testing",
+        aws_secret_access_key="testing",
+    )
+    with Stubber(runtime) as stub:
+        stub.add_client_error(operation, "ThrottlingException", "private provider contents", 429)
+        monkeypatch.setattr("backend.services.cloud.aws_client", lambda service: runtime)
+        with pytest.raises(AppError) as error:
+            if operation == "converse":
+                converse("Extract", "Synthetic")
+            else:
+                embed_text("policy")
+        assert error.value.status == 429
+        assert error.value.code == "model_throttled"
+        assert "zero quota" in str(error.value)
+        stub.assert_no_pending_responses()
+    with db.transaction() as connection:
+        usage = db.all_records(connection, "usage")
+        assert len(usage) == 1
+        assert usage[0]["data"]["status"] == "rejected"
+        assert usage[0]["data"]["error_code"] == "ThrottlingException"
+        assert "private provider contents" not in str(usage)

@@ -17,7 +17,11 @@ QUOTAS = {
 
 
 def check(
-    profile="pixel-perfect", region="ap-southeast-2", expected_project_id=None, client_factory=None
+    profile="pixel-perfect",
+    region="ap-southeast-2",
+    expected_project_id=None,
+    client_factory=None,
+    expected_plan="FREE",
 ):
     import boto3
     from botocore.config import Config
@@ -71,7 +75,7 @@ def check(
 
     def plan():
         value = client_factory("freetier").get_account_plan_state()["accountPlanType"]
-        return value == "FREE", {"plan_type": value, "expected_plan": "FREE"}
+        return value == expected_plan, {"plan_type": value, "expected_plan": expected_plan}
 
     if not inspect("plan", plan):
         return report()

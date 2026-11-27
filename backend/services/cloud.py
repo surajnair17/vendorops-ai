@@ -2,7 +2,7 @@
 
 import json
 import math
-from contextlib import nullcontext
+from contextlib import closing, nullcontext
 from time import monotonic
 
 from pydantic import BaseModel, Field
@@ -20,6 +20,12 @@ def require_live(send: bool = False):
             "live_calls_disabled",
             "Live calls require an agreed budget and explicit configuration.",
         )
+    if settings.bedrock_region and settings.bedrock_region != settings.aws_region:
+        raise AppError(
+            422,
+            "region_mismatch",
+            "Bedrock must use the selected project Region. Cross-Region calls are disabled.",
+        )
     if send and (not settings.live_send_enabled or not settings.ses_sender):
         raise AppError(
             403, "live_send_disabled", "Real email sending is disabled or its sender is missing."
@@ -33,9 +39,7 @@ def aws_client(service: str):
 
     return boto3.Session(profile_name=settings.aws_profile or None).client(
         service,
-        region_name=(settings.bedrock_region or settings.aws_region)
-        if service == "bedrock-runtime"
-        else settings.aws_region,
+        region_name=settings.aws_region,
         config=Config(connect_timeout=5, read_timeout=45, retries={"total_max_attempts": 1}),
     )
 
@@ -84,6 +88,42 @@ def finish_usage(usage: dict, status: str, connection=None, **details):
         return db.update(conn, current, {**current["data"], "status": status, **details})
 
 
+def provider_failure(error, usage, *, kind, started, connection=None):
+    from botocore.exceptions import ClientError
+
+    if isinstance(error, AppError):
+        finish_usage(usage, "not_started", connection, error_code=error.code)
+        return error
+    code = (
+        error.response.get("Error", {}).get("Code", type(error).__name__)
+        if isinstance(error, ClientError)
+        else type(error).__name__
+    )
+    throttled = code in {"ThrottlingException", "TooManyRequestsException"}
+    finish_usage(
+        usage,
+        "rejected" if throttled else "unknown",
+        connection,
+        error_type=type(error).__name__,
+        error_code=code,
+        latency_seconds=monotonic() - started,
+    )
+    if throttled:
+        return AppError(
+            429,
+            "model_throttled",
+            "Bedrock throttled this request. Check the selected Region's applied inference "
+            "quotas before retrying; a zero quota requires AWS to resolve it.",
+        )
+    if code in {"ReadTimeoutError", "ConnectTimeoutError"}:
+        return AppError(
+            504, "provider_timeout", "The model timed out; usage may have been incurred."
+        )
+    return AppError(
+        502, f"{kind}_unavailable", f"The {kind} call failed; usage may have been incurred."
+    )
+
+
 def converse(system: str, user: str) -> str:
     usage = reserve_usage("model")
     start = monotonic()
@@ -95,18 +135,7 @@ def converse(system: str, user: str) -> str:
             inferenceConfig={"maxTokens": settings.max_output_tokens, "temperature": 0},
         )
     except Exception as error:
-        if isinstance(error, AppError):
-            raise
-        finish_usage(
-            usage, "unknown", error_type=type(error).__name__, latency_seconds=monotonic() - start
-        )
-        if type(error).__name__ in {"ReadTimeoutError", "ConnectTimeoutError"}:
-            raise AppError(
-                504, "provider_timeout", "The model timed out; usage may have been incurred."
-            ) from error
-        raise AppError(
-            502, "model_unavailable", "The model call failed; usage may have been incurred."
-        ) from error
+        raise provider_failure(error, usage, kind="model", started=start) from error
     with db.transaction() as connection:
         db.update(
             connection,
@@ -166,16 +195,14 @@ def embed_text(text: str, connection=None) -> list[float]:
             accept="application/json",
             body=json.dumps({"inputText": text, "dimensions": 1024, "normalize": True}),
         )
-        payload = json.loads(response["body"].read())
+        with closing(response["body"]) as body:
+            payload = json.loads(body.read())
         vector = payload["embedding"]
         if len(vector) != 1024 or not all(math.isfinite(v) for v in vector):
             raise ValueError("Invalid embedding dimensions or values")
     except Exception as error:
-        finish_usage(usage, "unknown", connection, error_type=type(error).__name__)
-        if isinstance(error, AppError):
-            raise
-        raise AppError(
-            502, "embedding_unavailable", "Policy embedding failed. Usage may have been incurred."
+        raise provider_failure(
+            error, usage, kind="embedding", started=started, connection=connection
         ) from error
     finish_usage(
         usage,

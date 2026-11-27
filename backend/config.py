@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     max_model_characters: int = Field(default=24000, gt=0)
     live_calls_enabled: bool = False
     live_send_enabled: bool = False
-    aws_region: str = "us-east-1"
+    aws_region: str = "ap-southeast-2"
     aws_profile: str = ""
     bedrock_region: str = ""
     model_id: str = "amazon.nova-lite-v1:0"

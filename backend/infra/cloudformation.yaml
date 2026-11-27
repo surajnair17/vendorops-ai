@@ -1,5 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: VendorOps private single-operator PoC; no public inbound application access.
+Metadata:
+  AWSToolsMetrics:
+    AWSAgentToolkit: aws-cloudformation@3
+  com.aws.cloudformation.Context:
+    ref: backend/docs/aws-setup.md
 Parameters:
   VpcId:
     Type: AWS::EC2::VPC::Id
@@ -37,8 +42,13 @@ Parameters:
     Description: t3.small supports the new Free plan; t3.medium needs a Paid plan.
   BedrockRegion:
     Type: String
-    Default: us-east-1
-    Description: Region for the regional Nova Lite and Titan model APIs (no inference profile).
+    Default: ap-southeast-2
+    Description: Must equal the stack Region; regional Nova Lite and Titan APIs only.
+Rules:
+  SameRegionInference:
+    Assertions:
+      - Assert: !Equals [!Ref BedrockRegion, !Ref 'AWS::Region']
+        AssertDescription: Bedrock must use the selected project Region.
 Conditions:
   UseTextract: !Equals [!Ref EnableTextract, 'true']
 Resources:
@@ -187,6 +197,7 @@ Resources:
                 Resource: !Sub 'arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:identity/${SenderEmail}'
                 Condition:
                   ForAllValues:StringEquals: {'ses:Recipients': [!Ref TestRecipientEmail]}
+                  'Null': {'ses:Recipients': 'false'}
               - Effect: Allow
                 Action: [logs:CreateLogStream, logs:PutLogEvents]
                 Resource: !GetAtt ApplicationLogs.Arn
@@ -255,6 +266,8 @@ Resources:
               VENDOROPS_DAILY_MODEL_CALLS=20
               VENDOROPS_DAILY_OCR_JOBS=2
               VENDOROPS_DAILY_EMAIL_SENDS=2
+              VENDOROPS_MAX_DOCUMENT_PAGES=5
+              VENDOROPS_MAX_OUTPUT_TOKENS=4096
               CONFIG
               bash backend/infra/bootstrap.sh
           - OcrProvider: !If [UseTextract, textract, local]

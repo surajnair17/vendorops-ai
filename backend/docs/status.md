@@ -4,11 +4,11 @@
 
 | Area | Latest observed result |
 | --- | --- |
-| Local tests | 104 tests passed; Ruff lint and formatting passed |
+| Local tests | 118 tests passed; Ruff lint and formatting passed |
 | Browser walkthrough | [2 minute 18 second recording](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4), real local OCR, fixture AI, simulated email |
 | HTTP and frontend | Real-server upload/review smoke and actual Chrome walkthrough passed |
-| CI | Offline tests and Linux container build/startup passed for `ae4f202` |
-| AWS | Sign-in and model access verified; regional inference quotas are zero, so live AI is blocked |
+| CI | Offline tests and Linux container build/startup passed for `960a16b`; current runs are in GitHub Actions |
+| AWS | Free plan, sign-in, model access, and network verified; five inference quotas remain zero; SES verification requested |
 | Cloud release | Deployment, live AI accuracy, and real inbox delivery remain unverified |
 
 The sections below retain milestone evidence. Older entries describe the state at their checkpoint;
@@ -21,6 +21,30 @@ and anchors resolved before the direct-download links replaced the repository's 
 The repository About description and topics now include quotation review
 and the recorded demo. Credentials, private documents, detailed run receipts, and runtime data
 remain excluded from Git.
+
+## AWS deployment checks
+
+- All application and deployment defaults now use `ap-southeast-2`. A mismatched Bedrock Region
+  is rejected before SDK calls or usage reservations; CloudFormation independently enforces the
+  same Region. The optional toolkit endpoint is separate from application resource placement.
+- Deployment preflight now checks the actual plan, model access, and applied inference quotas.
+  Zero quotas prevent creating a host. Wrong-project checks stop before other services are read.
+  The review digest includes Compose, Dockerfiles, and runtime requirements, and deployment checks
+  that those files match the selected Git release.
+- Fixed the SES IAM recipient condition for an absent recipient key. AWS Compose allows 150 seconds
+  for model requests; bootstrap sets five-page and 4,096-output-token limits. SDK throttling returns
+  a readable quota explanation and counts the rejected attempt without an automatic retry.
+- Verified current Sydney rates and prepared the private deployment record using existing networking.
+  Thirty-two hours of t3.small/IPv4 plus a month of 30 GB gp3 is $3.88 before other service usage.
+  Fresh configuration leaves prices unset until they are checked. No EC2 host or S3 bucket was created.
+- AWS accepted the template through `ValidateTemplate`; local cfn-lint, all 118 tests, Ruff, and
+  real-server frontend/API smoke checks passed. AWS confirmed the Free plan, available model access,
+  and five zero non-adjustable inference quotas. One SES identity verification was requested with
+  user authorization; the link was still pending at the last check. No application email was sent.
+- CloudFormation Guard is not installed; its installation awaits the separate permission requested
+  by its skill. Template lint and AWS syntax validation do not establish a deployed or fully
+  compliant application. Live extraction/retrieval quality, inbox arrival, and host recovery remain
+  unverified until AWS quotas and the remaining deployment gates are resolved.
 
 <details>
 <summary><strong>Milestone evidence and historical decisions</strong></summary>

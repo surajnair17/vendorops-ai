@@ -3,13 +3,16 @@ services:
     logging:
       driver: awslogs
       options:
-        awslogs-region: ${VENDOROPS_AWS_REGION:-us-east-1}
+        awslogs-region: ${VENDOROPS_AWS_REGION:-ap-southeast-2}
         awslogs-group: ${VENDOROPS_LOG_GROUP:?Set the stack LogGroup output}
         awslogs-stream: backend
   worker:
     logging:
       driver: awslogs
       options:
-        awslogs-region: ${VENDOROPS_AWS_REGION:-us-east-1}
+        awslogs-region: ${VENDOROPS_AWS_REGION:-ap-southeast-2}
         awslogs-group: ${VENDOROPS_LOG_GROUP:?Set the stack LogGroup output}
         awslogs-stream: worker
+  frontend:
+    environment:
+      VENDOROPS_REQUEST_TIMEOUT_SECONDS: "150"

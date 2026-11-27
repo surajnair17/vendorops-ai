@@ -1,7 +1,7 @@
 # Local operation and private AWS demonstration
 
 Run commands from the repository root unless a section says otherwise. Read the cost worksheet
-before enabling a paid service. The repository never deploys from CI or sends a real email by default.
+before enabling a live service. The repository never deploys from CI or sends a real email by default.
 
 ## Local start and stop
 
@@ -82,7 +82,8 @@ There is no NAT Gateway, load balancer, or public login. CPU credit mode is stan
 CPU-credit charges; sustained workloads can be throttled.
 
 Before provisioning: agree the spending limit, select the AWS account and region, confirm the subnet,
-verify sender and recipient identities in the SES sandbox, and check model access. No credentials
+verify sender and recipient identities in the SES sandbox, and check model access and applied
+inference quotas. A zero quota blocks provisioning even when model access is authorized. No credentials
 belong in Git or chat. Use an AWS profile for administration and the EC2 instance role at runtime.
 Budgets alert after usage is recorded; they are not a billing cap. See [the cost worksheet](costs.md).
 
@@ -115,7 +116,7 @@ hop limit supports instance-role access from containers; no long-lived AWS keys 
 Forward the remote Streamlit port from your laptop:
 
 ```powershell
-aws ssm start-session --target INSTANCE_ID --document-name AWS-StartPortForwardingSession --parameters 'portNumber=8501,localPortNumber=8501'
+aws ssm start-session --profile pixel-perfect --region ap-southeast-2 --target INSTANCE_ID --document-name AWS-StartPortForwardingSession --parameters 'portNumber=8501,localPortNumber=8501'
 ```
 
 Open localhost:8501. The backend stays inside the host/container network. Use a separate forwarding
@@ -127,13 +128,16 @@ docker compose --env-file backend/.env -f backend/infra/compose.yaml -f backend/
 
 ## Live service verification
 
-1. Enable `VENDOROPS_LIVE_CALLS_ENABLED`, set a positive agreed budget, and restart the processes.
+1. Run the read-only Bedrock preflight in [AWS setup](aws-setup.md). Confirm the current Free plan,
+   reviewed Sydney configuration, positive quotas, and agreed budget before enabling
+   `VENDOROPS_LIVE_CALLS_ENABLED`. Restart the processes.
 2. Enable `VENDOROPS_PROVIDER=bedrock` and validate one synthetic digital document. Reindex policies
    for Titan; fixture and real embeddings never share a collection.
-   Set the frontend request timeout to at least 120 seconds for the bounded two-attempt live
-   extraction path, then restart Streamlit.
-3. Upload a scanned synthetic PDF and explicitly request OCR. The durable worker uploads it to S3,
-   starts Textract with an idempotency token, and receives completion through SNS/SQS. It fetches all
+   The AWS Compose override sets the frontend timeout to 150 seconds for bounded model repairs.
+3. On the selected Free plan, upload a scanned synthetic PDF and request **local OCR**. The worker
+   renders pages and runs Tesseract; inspect recognized text before model extraction. On the optional
+   Paid-plan Textract deployment, the worker uploads the source to S3, starts Textract with an
+   idempotency token, and receives completion through SNS/SQS. It fetches all
    result pages, preserves existing digital text, and fills textless pages. Pages containing only a
    watermark still need manual inspection: nonempty digital text is preserved.
 4. Inspect failed/partial jobs before requesting another. Start attempts are bounded to three with

@@ -59,9 +59,31 @@ Decision: local OCR keeps scanned PDFs available on the selected Free plan. Regi
 avoids the cross-region inference restriction. Explain why Tesseract OCR output is still uncertain
 and why SDK stubs do not establish actual account permissions or model accuracy.
 
-Trace an OCR job through storage, Textract, SNS, SQS, and the worker. Explain each IAM permission.
+Trace a Free-plan scan through the local OCR worker, a text revision, Bedrock, comparison, policy
+evidence, approval, and SES. For the optional Textract adapter, also trace S3, SNS, and SQS.
+Explain each IAM permission.
 Restart the worker during a job. Compare recorded usage with an actual bill and explain fixed
 hosting costs versus per-document costs. Restore a backup before claiming recovery works.
+
+### Cloud checkpoint: deployment readiness
+
+Architecture: local review → read-only AWS checks → release verification → CloudFormation →
+private host, with application services in Sydney. Real email requires verification and approval.
+
+Decision: model catalog availability and authorized access do not establish a usable inference
+quota. Check applied quotas before paying for hosting that cannot complete its AI workflow.
+
+Debugging lesson: the initial defaults mixed Sydney storage with US model calls and US prices.
+One selected Region now applies to all application clients; prices start unset. A real AWS check
+still found zero quotas, despite authorized model access, so the remaining issue is external.
+
+Evidence: 118 tests, real HTTP/Streamlit smoke, cfn-lint, and AWS template syntax validation passed.
+Live model accuracy, host recovery, and inbox delivery remain unverified. SDK stubs establish
+request contracts and failure behavior only.
+
+Exercise: change the fake applied quota to zero in `test_aws_setup.py`, predict the outcome, and
+explain why no stack should be created. Then compare an edited Compose file with a reviewed release
+and explain why deployment refuses the mismatch. Record your teach-back in your own words.
 
 ## Phase 7: evaluation
 

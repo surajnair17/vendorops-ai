@@ -36,6 +36,11 @@ jobs:
       - run: cfn-lint backend/infra/cloudformation.yaml
       - run: cp backend/.env.example backend/.env
       - run: docker compose -f backend/infra/compose.yaml config --quiet
+      - name: Validate Sydney AWS Compose configuration without calling AWS
+        env:
+          VENDOROPS_AWS_REGION: ap-southeast-2
+          VENDOROPS_LOG_GROUP: /vendorops/ci-validation
+        run: docker compose --env-file backend/.env -f backend/infra/compose.yaml -f backend/infra/compose.aws.yaml config --quiet
       - run: docker compose -f backend/infra/compose.yaml build
       - run: docker compose -f backend/infra/compose.yaml up --detach --wait --wait-timeout 180
       - run: curl --fail http://127.0.0.1:8000/health && curl --fail http://127.0.0.1:8501/_stcore/health

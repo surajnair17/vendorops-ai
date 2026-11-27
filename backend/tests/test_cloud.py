@@ -162,7 +162,7 @@ def test_failed_embedding_counts_toward_budget(client, monkeypatch):
             raise TimeoutError("provider contents must not be logged")
 
     monkeypatch.setattr("backend.services.cloud.aws_client", lambda service: Broken())
-    with pytest.raises(AppError, match="embedding failed"):
+    with pytest.raises(AppError, match="embedding call failed"):
         embed_text("price variance")
     with db.transaction() as connection:
         assert db.all_records(connection, "usage")[0]["data"]["status"] == "unknown"

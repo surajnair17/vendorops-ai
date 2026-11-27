@@ -76,17 +76,21 @@ Copy-Item backend/infra/deployment.example.json backend/artifacts/aws/deployment
 
 Edit the ignored copy. Enter the account ID, current credit balance, reviewed usage allowance,
 VPC/subnet IDs, sender/recipient/budget email addresses, and the **full pushed release commit**.
-For the newer signup, find the project's assigned Region under AWS Settings → Project → Additional
-Info. Use that Region for the stack, VPC, SES, and CLI profile; it may differ from the original
-us-east-1 default. Check regional EC2/EBS rates and update `pricing_region`, `pricing_instance_type`,
-`ec2_hourly_usd`, and `gp3_gb_month_usd` before review. The estimate is based on these entered rates.
-`bedrock_region` can remain us-east-1 for regional model APIs, which the new experience allows
-outside the project's resource Region. This does not use cross-region inference profiles. See
-[project Regions](https://docs.aws.amazon.com/accounts/latest/reference/project-regions.html).
+For the newer signup, confirm the assigned Region at AWS Settings → View all projects → Overview →
+Additional Info → Region, or inspect the named profile in `~/.aws/config`. This project's selected
+Region is **ap-southeast-2**. Use it for the stack, VPC, SES, Bedrock, and CLI profile. The deployment
+record rejects a different `bedrock_region`; the application also rejects it before any AWS call.
+CloudFormation independently requires the Bedrock Region to equal the stack Region. Cross-Region
+inference profiles are not used.
+
+Check regional prices and enter `pricing_region`, `pricing_instance_type`, `ec2_hourly_usd`, and
+`gp3_gb_month_usd`. Prices start unset so a fresh configuration cannot silently approve US rates.
+The [cost worksheet](costs.md) records Sydney t3.small at $0.0264/hour and gp3 at $0.096/GB-month,
+checked November 27, 2026; recheck them before provisioning. The estimate uses these entered rates.
 Keep `account_plan=free`, `maximum_out_of_pocket_usd=0`, `instance_type=t3.small`, and
-`enable_textract=false`. The expected 32-hour hosting subtotal is about **$3.23**, plus service
-usage. A proposed **$10 credit allowance** leaves room for a small synthetic demonstration; it
-is not assumed approved, reserved credit, or a billing cap. See [costs](costs.md).
+`enable_textract=false`. The 32-hour hosting subtotal with one month of retained storage is about
+**$3.88**, plus service usage. The agreed **$10 credit allowance** covers the bounded local run;
+review the concrete hosting plan separately before provisioning. It is not a billing cap.
 
 AWS lists t3.small as [Free-plan eligible](https://aws.amazon.com/free/compute/). The host has 2 GiB
 RAM and 2 GiB swap on encrypted EBS; it is intended for this small synthetic corpus. Builds run
@@ -112,15 +116,20 @@ nor a long-lived access key is needed. Verify that credits have not expired befo
 .\.venv\Scripts\python.exe -m backend.scripts.aws_setup plan --config backend/artifacts/aws/deployment.json
 ```
 
-The checker calls STS, EC2 describe APIs, regional Bedrock model metadata, and SES identity metadata.
+The checker calls STS, Free Tier plan status, EC2 describe APIs, regional Bedrock model catalog/access,
+Service Quotas, and SES identity metadata.
 It does not invoke a model, OCR, send email, or provision resources. Missing login, wrong account,
-root operator, wrong subnet/route, unavailable model metadata, or unverified email identities block
-deployment. The credit balance is operator-entered; the checker does not independently validate it.
-Model listing also does not prove invocation authorization or quota availability.
+root operator, a plan different from the reviewed plan, wrong subnet/route, unavailable model access,
+zero or unreadable inference quotas, or unverified email identities block deployment. A project
+mismatch stops checks before other services are inspected. The credit balance is operator-entered;
+the checker does not independently validate it. Passing read checks still does not prove invocation
+success, extraction accuracy, or inbox arrival.
 
 The plan displays configuration, resources, estimated hosting, remaining blockers, and a review
-digest covering the configuration and local infrastructure/bootstrap files. Changing them changes
-the digest. Review the specific account, resources, credit allowance, and release before deployment.
+digest covering configuration, template, bootstrap, Compose files, Dockerfiles, and runtime
+requirements. Changing them changes the digest. Deployment also checks that these files match the
+selected Git release, preventing an old bootstrap or Compose configuration from being deployed.
+Review the specific project, resources, credit allowance, and pushed release before deployment.
 
 ## 4. Provision the reviewed release
 
@@ -178,8 +187,10 @@ VENDOROPS_STORAGE_MODE=s3
 VENDOROPS_LIVE_SEND_ENABLED=false
 ```
 
-Restart backend/worker with the same Compose command used by bootstrap. Set Streamlit's request
-timeout to at least 120 seconds using its environment before testing bounded model repairs. Upload
+Restart backend/worker with the same Compose command used by bootstrap. The AWS Compose override
+sets Streamlit's request timeout to 150 seconds for bounded model repairs. Bootstrap limits combined
+model/embedding attempts to 20 per day, documents to five pages, output to 4,096 tokens, OCR to two
+jobs, and SES to two sends per day. These are application limits, not a monetary cap. Upload
 one synthetic digital invoice and verify every field against the source. Upload a scan, request
 local OCR, and inspect the recognized text before structuring. Local OCR makes no AWS calls and
 records its provider separately from Textract.
