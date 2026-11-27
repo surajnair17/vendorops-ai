@@ -1,5 +1,33 @@
 # Verification record — November 27, 2026
 
+## Live attempt and regional quota blocker
+
+- Renewed sign-in verified the expected project through `pixel-perfect` in `ap-southeast-2`.
+  The Free Tier API confirmed the Free plan. Both selected models are active and regional
+  on-demand models; the availability API reports authorized access and available entitlements.
+- The live browser run made two Nova Lite extraction attempts and one Titan embedding attempt.
+  All three returned `ThrottlingException`. No successful model response or token counts were
+  returned. The run retained human-reviewed source revisions, then stopped because it had no
+  retrieved policy evidence. Its partial recording is a failed live attempt, not a completed demo.
+- Applied Nova Lite quotas are zero for tokens/minute (`L-70423BF8`), requests/minute
+  (`L-E386A278`), and tokens/day (`L-45E0AD92`). Titan Text Embeddings V2 quotas are zero for
+  tokens/minute (`L-DE641971`) and requests/minute (`L-26C560CE`). All five are reported as
+  non-adjustable through Service Quotas. No positive on-demand inference quota was listed for
+  another model in the selected Region. AWS Support must clarify or resolve this project limit;
+  increasing the application's credit allowance does not change a zero inference quota.
+- Stopped the recording's temporary processes and made no further runtime attempts. No cloud
+  resources or support cases were created, no plan or IAM permissions were changed, and no real
+  email was sent. Attempt records have unknown billing outcomes; charges are not independently
+  verified. The successful offline recording below remains available separately.
+- Added `python -m backend.scripts.check_bedrock` and a recorder preflight that checks identity,
+  Free-plan status, model catalog/access, and applied regional quotas using read APIs only.
+  Zero quotas now block filming before servers or paid calls start. Failed browser runs retain
+  partial workflow provenance rather than only the final exception.
+- Verification: the real read-only preflight confirmed all five zero quotas. All 104 local tests
+  passed, including zero-quota blocking, identity mismatch, model authorization, sanitized read
+  failures, and preventing recording processes from starting. Ruff lint and formatting passed.
+  The optional recorder test is skipped where Playwright preview dependencies are not installed.
+
 ## End-to-end browser recording
 
 - Recorded the actual application at 1440 × 1000, with chapter captions, synthetic inputs, and an
@@ -143,7 +171,8 @@ Reproducible benchmark JSON is generated under the ignored `backend/artifacts/` 
 
 ## Remaining gates
 
-- No paid AWS model, embedding, OCR, S3, or SES calls have been made.
+- No successful AWS inference has completed. Three Bedrock runtime attempts were throttled;
+  no paid OCR, S3, or SES operations have been attempted.
 - No AWS resources have been provisioned; actual deployment and IAM access remain unverified.
 - Docker is unavailable on this machine. The Linux CI container build/startup checks passed;
   deployment on the selected small AWS host remains unverified. AWS CLI is installed locally.

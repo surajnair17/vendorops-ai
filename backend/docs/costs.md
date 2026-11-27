@@ -1,6 +1,8 @@
 # Cost worksheet
 
-Live calls and provisioning have not been performed. The application requires an explicitly agreed
+Three Bedrock runtime attempts were throttled; none returned a successful result or token usage.
+Their charges have not been independently verified. No cloud resources have been provisioned.
+The application requires an explicitly agreed
 budget and opt-in flags; its limits count reserved attempts, including failures. Model and embedding
 calls share a daily allowance. OCR counts jobs (each can include up to the configured page maximum),
 and email has a separate send allowance. None of these replace AWS billing controls.
@@ -10,7 +12,8 @@ and email has a separate send allowance. None of these replace AWS billing contr
 The user authorized **$10 of AWS credit usage**, retaining the Free plan and a **$0 out-of-pocket**
 preference. This authorization covers the bounded local demonstration, not always-on hosting.
 No EC2, S3, or other persistent cloud resources are needed for the recording. OCR runs locally and
-email is simulated. Live inference still requires a working sign-in and access checks.
+email is simulated. Sign-in and model access have been verified, but applied regional inference
+quotas are zero. Live inference requires AWS to resolve that separate quota blocker.
 
 The [Sydney Bedrock Price List](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBedrock/current/ap-southeast-2/index.json)
 returned these on-demand USD rates on November 27, 2026:

@@ -85,6 +85,8 @@ The recorder always uses local storage, local OCR, a SQLite cosine index, and si
 creates no AWS infrastructure and never enables SES. `--provider bedrock --allowance 10` enables paid
 Nova/Titan calls only inside its child processes, using `pixel-perfect` in `ap-southeast-2`. Use that
 option only after reviewing current pricing, confirming the Free plan and selected project, and
-authorizing the allowance. The allowance argument is a configuration check, not a billing cap.
+authorizing the allowance. A read-only preflight checks model access and applied inference quotas
+before starting servers; a zero or unreadable quota blocks recording without invoking a model.
+The allowance argument is a configuration check, not a billing cap.
 Inspect the receipt: a live provider setting alone does not prove extraction accuracy or successful
 inference. Application defaults remain offline.

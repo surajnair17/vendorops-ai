@@ -150,6 +150,25 @@ policies, and a simulated send. Keep a copy of the deployed commit and stack out
 
 ## 5. Verify each live service separately
 
+Before enabling Bedrock, check actual model access and applied inference quotas from the local
+development environment:
+
+```powershell
+.\.venv\Scripts\python.exe -m backend.scripts.check_bedrock --profile pixel-perfect --region ap-southeast-2 --output backend/artifacts/aws/bedrock-readiness.json
+```
+
+This read-only check expects the selected Free plan and makes no inference or resource changes.
+Add `--expected-project-id YOUR_PROJECT_ID` to verify the project identity as well. A catalog entry
+and authorized model access can coexist with zero inference quotas. A zero or unreadable quota
+returns a failing exit code, and the live browser recorder runs this check automatically.
+
+If quotas are zero and non-adjustable, preserve the report and contact AWS Support with the model
+IDs, selected Region, quota codes/current values, requested usage, and `ThrottlingException`.
+[AWS's official throttling guidance](https://repost.aws/knowledge-center/bedrock-throttling-error)
+explains that new projects can have lower initial quotas. Repeated runtime retries cannot resolve
+a zero quota. Keep the agreed plan and Region; ask Support to clarify eligibility and enable a
+suitable quota. Recheck readiness after AWS resolves it before recording or measuring live quality.
+
 Through an SSM shell, edit `/opt/vendorops/backend/.env` for the reviewed service checks:
 
 ```text

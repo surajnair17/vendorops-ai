@@ -462,6 +462,27 @@ class Walkthrough:
 def record(args):
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
+    if args.provider == "bedrock":
+        from backend.scripts.check_bedrock import check
+
+        readiness = check()
+        (output / "readiness.json").write_text(json.dumps(readiness, indent=2), encoding="utf-8")
+        if not readiness["ready"]:
+            (output / "receipt.json").write_text(
+                json.dumps(
+                    {
+                        "status": "blocked",
+                        "provider": "bedrock",
+                        "live_processes_stopped": True,
+                        "reason": "Read-only AWS readiness checks did not pass",
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+            raise RuntimeError(
+                f"Live recording blocked before inference. Inspect {output / 'readiness.json'}"
+            )
     api_port, ui_port = available_port(), available_port()
     while api_port == ui_port:
         ui_port = available_port()
@@ -541,6 +562,7 @@ def record(args):
                 page = context.new_page()
                 page.set_default_timeout(60000)
                 video = page.video
+                flow = None
                 try:
                     mode = "LIVE BEDROCK" if args.provider == "bedrock" else "OFFLINE FIXTURES"
                     page.set_content(
@@ -565,6 +587,9 @@ def record(args):
                     page.screenshot(path=str(output / "final-screen.png"), full_page=True)
                 except Exception as error:
                     page.screenshot(path=str(output / "failure-screen.png"), full_page=True)
+                    if flow is not None:
+                        receipt.update(flow.receipt)
+                    receipt["status"] = "failed"
                     receipt.update({"error_type": type(error).__name__, "error": str(error)[:1500]})
                     raise
                 finally:
