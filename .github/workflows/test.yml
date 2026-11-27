@@ -11,7 +11,7 @@ jobs:
       AWS_EC2_METADATA_DISABLED: 'true'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with: {python-version: '3.13'}
       - run: pip install --require-hashes -r backend/requirements-lock.txt -r frontend/requirements-lock.txt
       - run: pip install -r backend/requirements-dev.txt -r backend/requirements-cloud.txt -r frontend/requirements-dev.txt
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with: {python-version: '3.13'}
       - run: pip install -r backend/infra/requirements.txt
       - run: cfn-lint backend/infra/cloudformation.yaml
