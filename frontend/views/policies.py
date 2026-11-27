@@ -7,7 +7,13 @@ from frontend.client import api
 
 def render():
     st.header("Policies and confirmed rules")
-    st.caption("Fixture retrieval is lexical test plumbing. It does not measure semantic accuracy.")
+    metrics = api("GET", "/metrics")
+    if metrics and metrics["provider"] == "bedrock":
+        st.caption("Titan embeddings retrieve source passages. Python applies confirmed rules.")
+    else:
+        st.caption(
+            "Fixture retrieval is lexical test plumbing. It does not measure semantic accuracy."
+        )
     with st.form("policy_upload"):
         name = st.text_input("Policy name", "Purchasing")
         version = st.text_input("Policy version", "1")

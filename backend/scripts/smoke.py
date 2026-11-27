@@ -23,6 +23,7 @@ def main() -> None:
         **os.environ,
         "VENDOROPS_DATA_DIR": temporary.name,
         "VENDOROPS_PROVIDER": "fixture",
+        "VENDOROPS_VECTOR_STORE": "sqlite",
         "VENDOROPS_LIVE_CALLS_ENABLED": "false",
         "VENDOROPS_LIVE_SEND_ENABLED": "false",
     }

@@ -87,6 +87,7 @@ def reindex(identifier: str):
                 **policy["data"],
                 "indexed": True,
                 "index_provider": settings.provider,
+                "index_store": settings.vector_store,
                 "embedding_model_id": settings.embedding_model_id
                 if settings.provider == "bedrock"
                 else None,
@@ -105,6 +106,7 @@ def metrics():
             "live_calls_enabled": settings.live_calls_enabled,
             "live_send_enabled": settings.live_send_enabled,
             "ocr_provider": settings.ocr_provider,
+            "vector_store": settings.vector_store,
             "model_id": settings.model_id if settings.provider == "bedrock" else None,
             "operator": settings.operator,
             "documents": len(db.all_records(connection, "document")),

@@ -9,6 +9,7 @@ def render():
     st.header("Operational metrics")
     if metrics := api("GET", "/metrics"):
         st.caption(f"Provider: {metrics['provider']} · Operator: {metrics['operator']}")
+        st.caption(f"Policy vector index: {metrics.get('vector_store', 'chroma')}")
         columns = st.columns(4)
         columns[0].metric("Documents", metrics["documents"])
         columns[1].metric("Actions", sum(metrics["action_states"].values()))

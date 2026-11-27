@@ -1,4 +1,29 @@
-# Verification record — November 26, 2026
+# Verification record — November 27, 2026
+
+## End-to-end browser recording
+
+- Recorded the actual application at 1440 × 1000, with chapter captions, synthetic inputs, and an
+  isolated database. The 2 minute 18 second H.264 MP4 decoded successfully; sampled frames were
+  inspected. The recording and its run receipt are local ignored artifacts.
+- The completed flow uploaded a digital PDF, stored a PO, ran real Tesseract OCR on a scanned
+  invoice, saved a human-reviewed invoice revision, detected the price variance, retrieved policy
+  evidence, applied a confirmed rule, edited and approved a draft, executed one simulated delivery,
+  assessed quotation terms and arithmetic, and displayed operations.
+- The receipt confirms three documents, two successful jobs, a quotation assessment with
+  `checks_passed`, one delivery attempt, and approval matching the sent content revision. All
+  temporary recording processes stopped. No real email was sent.
+- This run used fixture extraction and lexical embeddings; the scanned invoice was explicitly
+  reviewed by a human because its OCR text did not match an exact fixture. No live AI accuracy is
+  claimed. The approved local-run credit allowance is $10; AWS login remains required and no paid
+  AWS calls have occurred.
+- Added a repeatable browser recorder and an optional SQLite cosine index for small local policy
+  collections. Windows Application Control blocks a native dependency imported by Chroma on this
+  machine. The alternative needs no security-policy changes; Chroma remains the default elsewhere.
+  Switching index backends requires reindexing. Operations shows the selected backend.
+- Verification: 95 tests passed, including exact cosine retrieval, persistence, active-policy
+  filtering, replacement, invalid vectors, and backend changes. The real-server HTTP/Streamlit
+  smoke passed. The fixture retrieval benchmark returned the expected policy first for all five
+  queries; this does not establish semantic retrieval quality.
 
 ## Quotation milestone
 
@@ -127,7 +152,8 @@ Reproducible benchmark JSON is generated under the ignored `backend/artifacts/` 
   remain unmeasured. Saved outputs can be scored without calling paid services.
 - No learning exercise or teach-back is completed on behalf of the user.
 
-Live work needs an agreed budget, selected AWS account/subnet, verified SES identities, model access,
+The bounded local demonstration has an agreed $10 allowance. Cloud deployment still needs a
+reviewed resource plan, selected AWS project/subnet, verified SES identities, model access,
 and the deployment checklist. Both live flags stay disabled by default. The small corpus and
 single-operator design establish a portfolio PoC, not readiness for real customer data.
 

@@ -4,7 +4,7 @@ from pydantic import ValidationError
 
 from backend.config import settings
 from backend.errors import AppError
-from backend.examples import examples, quotation_examples
+from backend.examples import examples, quotation_examples, recording_examples
 from backend.schemas.business import SCHEMA_VERSION, BusinessDocument, issues_for, source_issues
 
 PROMPT_VERSION = 2
@@ -14,7 +14,7 @@ class FixtureProvider:
     mode = "fixture"
 
     def extract(self, text: str, repair: bool = False) -> str:
-        for example in [*examples(), *quotation_examples()]:
+        for example in [*examples(), *quotation_examples(), *recording_examples()]:
             if text.strip() == example["text"]:
                 return json.dumps(example["data"])
         raise AppError(

@@ -144,6 +144,9 @@ a price difference, an inactive policy, an unconfirmed rule, and an **unapproved
 Follow **Documents → Compare → Policies → Actions**. See the [demo script](backend/docs/demo.md)
 for a ten-minute walkthrough.
 
+To capture the full flow as a captioned MP4, follow the
+[browser recording instructions](frontend/README.md#record-an-end-to-end-walkthrough).
+
 For quotation review, upload `backend/artifacts/samples/quotations/Q-TERMS-001.pdf` in Documents,
 extract its fixture, then open **Quotes**. Set the assessment date to `2026-11-26` to check its
 dates and amounts. Unfamiliar quotes can start with manually reviewed fields. See the
@@ -190,7 +193,7 @@ flowchart LR
 | Documents | PyMuPDF, Tesseract | Digital text and local scanned-page OCR |
 | Business logic | Python, `Decimal` | Matching, arithmetic, confirmed policy rules |
 | Persistence | SQLite, SQLAlchemy | Revisioned records, audit events, durable jobs |
-| Retrieval | Chroma | Policy passage retrieval with stored citations |
+| Retrieval | Chroma or local SQLite cosine search | Policy passage retrieval with stored citations |
 | Optional cloud adapters | Bedrock, Titan, S3, SES, Textract | Live extraction, embeddings, storage, email, cloud OCR |
 
 Fixture extraction recognizes exact generated examples; it does not invent records for unknown

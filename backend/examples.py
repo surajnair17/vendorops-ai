@@ -1,5 +1,6 @@
 """Exact synthetic text/response pairs. These are fixtures, not an extraction model."""
 
+from copy import deepcopy
 from decimal import Decimal
 
 
@@ -134,3 +135,31 @@ def quotation_examples() -> list[dict]:
             "quote": next(line for line in text.splitlines() if line.startswith(label + ":")),
         }
     return [{"text": text, "data": data, "split": "dev"}]
+
+
+def recording_examples() -> list[dict]:
+    """Two explicitly labelled arithmetic examples for the recorded walkthrough."""
+    result = []
+    for source in examples()[3:5]:
+        data = deepcopy(source["data"])
+        data["document_number"] = (
+            "PO-DEMO-001" if data["document_type"] == "purchase_order" else "INV-DEMO-001"
+        )
+        data["po_number"] = "PO-DEMO-001"
+        data["document_date"] = "2026-11-27"
+        item = data["items"][0]
+        text = (
+            f"VendorOps synthetic {data['document_type']}\nSupplier: {data['supplier']}\n"
+            f"Number: {data['document_number']}\nDate: {data['document_date']}\n"
+            f"PO: {data['po_number']}\nCurrency: {data['currency']}\n"
+            "Item: SKU-001 | Paper boxes\nQuantity: 4 box\n"
+            f"Unit price: {item['unit_price']}\nLine discount: 0\nLine tax: 0\n"
+            f"Line total: {item['total']}\nSubtotal: {data['subtotal']}\n"
+            f"Discount: 0\nTax: 0\nFreight: 0\nTotal: {data['total']}"
+        )
+        data["evidence"]["document_number"]["quote"] = data["document_number"]
+        data["evidence"]["po_number"]["quote"] = data["po_number"]
+        data["evidence"]["document_date"] = {"page": 1, "quote": "Date: 2026-11-27"}
+        item["evidence"] = [{"page": 1, "quote": "Item: SKU-001 | Paper boxes"}]
+        result.append({"text": text, "data": data, "split": "dev"})
+    return result

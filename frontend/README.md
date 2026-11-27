@@ -61,3 +61,30 @@ It also checks the mobile layout. It creates no approvals or deliveries, disable
 uses temporary storage, and stops its own processes afterward. Output goes to
 `backend/docs/assets/`; review images before committing them. Browser tooling is optional and is
 not installed in the application container.
+
+## Record an end-to-end walkthrough
+
+With the optional preview dependencies and Chrome installed, run from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m frontend.scripts.record_demo --output backend/artifacts/recordings/my-demo --as-of 2026-11-27 --provider fixture
+```
+
+Choose a new output directory each time. The recorder launches isolated API, Streamlit, and worker
+processes, then drives the actual browser: digital upload, scanned-invoice OCR, reviewed fields,
+invoice/PO comparison, policy activation and rule confirmation, draft editing, approval, simulated
+delivery, quotation checks, and operations. Tesseract must be installed and configured for local OCR.
+Unknown fixture OCR output is explicitly corrected as a human revision using the synthetic source.
+
+Outputs include a captioned WebM, an H.264 MP4, and `receipt.json` containing the actual outcomes and
+provider provenance. Temporary servers stop when the run ends; generated data remains in the output
+directory for inspection and is ignored by Git. Failed runs retain a screenshot and partial WebM;
+they are not successful demonstrations. The recording contains no microphone audio.
+
+The recorder always uses local storage, local OCR, a SQLite cosine index, and simulated email. It
+creates no AWS infrastructure and never enables SES. `--provider bedrock --allowance 10` enables paid
+Nova/Titan calls only inside its child processes, using `pixel-perfect` in `ap-southeast-2`. Use that
+option only after reviewing current pricing, confirming the Free plan and selected project, and
+authorizing the allowance. The allowance argument is a configuration check, not a billing cap.
+Inspect the receipt: a live provider setting alone does not prove extraction accuracy or successful
+inference. Application defaults remain offline.

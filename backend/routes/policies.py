@@ -58,6 +58,7 @@ def save_policy(payload: PolicyInput, pages: list[str]):
                 **policy["data"],
                 "indexed": True,
                 "index_provider": settings.provider,
+                "index_store": settings.vector_store,
                 "embedding_model_id": settings.embedding_model_id
                 if settings.provider == "bedrock"
                 else None,

@@ -4,8 +4,6 @@ import argparse
 import json
 from pathlib import Path
 
-import chromadb
-from chromadb.config import Settings as ChromaSettings
 from sqlalchemy import create_engine
 
 from backend import db
@@ -14,10 +12,7 @@ from backend.services.policies import chunks_for, embedding, index_policy, retri
 
 
 def evaluate(policies: list[dict], queries: list[dict]) -> dict:
-    store = chromadb.EphemeralClient(settings=ChromaSettings(anonymized_telemetry=False))
-    vector_store = store.create_collection(
-        "retrieval-benchmark", embedding_function=None, metadata={"hnsw:space": "cosine"}
-    )
+    store = None
     engine = create_engine("sqlite://")
     hits1 = hits5 = relevant_total = supported = returned = 0
     details = []
@@ -27,6 +22,22 @@ def evaluate(policies: list[dict], queries: list[dict]) -> dict:
                 "CREATE TABLE records (id TEXT PRIMARY KEY, kind TEXT, "
                 "version INTEGER, data TEXT, created_at TEXT, updated_at TEXT)"
             )
+            if settings.vector_store == "sqlite":
+                from backend.services.vectors import SQLiteCollection
+
+                vector_store = SQLiteCollection("retrieval-benchmark", connection)
+            else:
+                import chromadb
+                from chromadb.config import Settings as ChromaSettings
+
+                store = chromadb.EphemeralClient(
+                    settings=ChromaSettings(anonymized_telemetry=False)
+                )
+                vector_store = store.create_collection(
+                    "retrieval-benchmark",
+                    embedding_function=None,
+                    metadata={"hnsw:space": "cosine"},
+                )
             for policy in policies:
                 record = db.create(
                     connection,
@@ -62,9 +73,11 @@ def evaluate(policies: list[dict], queries: list[dict]) -> dict:
                 )
     finally:
         engine.dispose()
-        store.delete_collection("retrieval-benchmark")
+        if store is not None:
+            store.delete_collection("retrieval-benchmark")
     return {
         "mode": "live_embeddings" if settings.provider == "bedrock" else "fixture_lexical_only",
+        "vector_store": settings.vector_store,
         "queries": len(queries),
         "policy_count": len(policies),
         "recall_at_1": hits1 / relevant_total if relevant_total else None,

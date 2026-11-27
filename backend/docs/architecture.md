@@ -8,7 +8,7 @@ flowchart LR
   A --> D[(SQLite snapshots)]
   A --> M[Fixture / Bedrock]
   A --> C[Python comparison]
-  A --> R[Chroma retrieval]
+  A --> R[Chroma / SQLite vector retrieval]
   R --> E[Fixture / Titan embeddings]
   C --> H[Confirmed rules]
   H --> V[Review and approval]
@@ -31,6 +31,11 @@ flowchart LR
   need an explicit one-to-one mapping. Supplier aliases require human confirmation.
 - Fixture embeddings hash words and are labelled lexical plumbing, not semantic accuracy.
   Real Titan embeddings use a separate collection; switching providers requires reindexing.
+- Chroma remains the default policy index. Set `VENDOROPS_VECTOR_STORE=sqlite` for a small local
+  corpus when native Chroma dependencies cannot load. This stores vectors in the existing database
+  and performs exact cosine search with active-policy filtering. It supports either fixture or
+  Titan embeddings; selecting SQLite does not turn fixtures into semantic embeddings. Changing
+  the index backend requires rebuilding active policies. This linear scan is intended for the PoC.
 - Policy paragraphs are evidence, not executable instructions. Confirmed rules retain citations.
   Conflicts abstain; tolerances never delete the observed numerical difference.
 - Editing an action clears approval. One durable outbox job prevents duplicate button-click sends.

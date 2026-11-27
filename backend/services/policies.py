@@ -41,8 +41,24 @@ def embedding(text: str, connection=None) -> list[float]:
 
 
 def collection():
-    import chromadb
-    from chromadb.config import Settings as ChromaSettings
+    name = f"policies-{settings.provider}-v1" + (
+        "-" + hashlib.sha256(settings.embedding_model_id.encode()).hexdigest()[:12]
+        if settings.provider == "bedrock"
+        else ""
+    )
+    if settings.vector_store == "sqlite":
+        from backend.services.vectors import SQLiteCollection
+
+        return SQLiteCollection(name)
+    try:
+        import chromadb
+        from chromadb.config import Settings as ChromaSettings
+    except ImportError as error:
+        raise AppError(
+            503,
+            "vector_store_unavailable",
+            "Chroma could not load. Configure the SQLite vector store or repair its dependencies.",
+        ) from error
 
     options = ChromaSettings(anonymized_telemetry=False)
     client = (
@@ -51,12 +67,7 @@ def collection():
         else chromadb.PersistentClient(path=str(settings.data_dir / "vectors"), settings=options)
     )
     return client.get_or_create_collection(
-        f"policies-{settings.provider}-v1"
-        + (
-            "-" + hashlib.sha256(settings.embedding_model_id.encode()).hexdigest()[:12]
-            if settings.provider == "bedrock"
-            else ""
-        ),
+        name,
         embedding_function=None,
         metadata={"hnsw:space": "cosine"},
     )
@@ -93,6 +104,9 @@ def retrieve(connection, query: str, vector_store=None, query_vector=None) -> li
     if any(
         not db.get(connection, p["id"])["data"].get("indexed")
         or db.get(connection, p["id"])["data"].get("index_provider") != settings.provider
+        or vector_store is None
+        and db.get(connection, p["id"])["data"].get("index_store", "chroma")
+        != settings.vector_store
         or settings.provider == "bedrock"
         and db.get(connection, p["id"])["data"].get("embedding_model_id")
         != settings.embedding_model_id

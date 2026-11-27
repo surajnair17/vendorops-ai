@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     storage_mode: Literal["local", "s3"] = "local"
     chroma_host: str = ""
     chroma_port: int = 8000
+    vector_store: Literal["chroma", "sqlite"] = "chroma"
 
 
 settings = Settings()

@@ -15,6 +15,7 @@ def offline_configuration(monkeypatch):
     monkeypatch.setattr(settings, "recipient_allowlist", "reviewer@example.test")
     monkeypatch.setattr(settings, "storage_mode", "local")
     monkeypatch.setattr(settings, "chroma_host", "")
+    monkeypatch.setattr(settings, "vector_store", "sqlite")
     monkeypatch.setattr(settings, "ocr_provider", "local")
 
 

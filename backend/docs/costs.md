@@ -5,7 +5,30 @@ budget and opt-in flags; its limits count reserved attempts, including failures.
 calls share a daily allowance. OCR counts jobs (each can include up to the configured page maximum),
 and email has a separate send allowance. None of these replace AWS billing controls.
 
-## Free-plan selection, checked November 25, 2026
+## Approved local recording, November 27, 2026
+
+The user authorized **$10 of AWS credit usage**, retaining the Free plan and a **$0 out-of-pocket**
+preference. This authorization covers the bounded local demonstration, not always-on hosting.
+No EC2, S3, or other persistent cloud resources are needed for the recording. OCR runs locally and
+email is simulated. Live inference still requires a working sign-in and access checks.
+
+The [Sydney Bedrock Price List](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBedrock/current/ap-southeast-2/index.json)
+returned these on-demand USD rates on November 27, 2026:
+
+| Model | Input per 1,000 tokens | Output per 1,000 tokens |
+| --- | ---: | ---: |
+| Amazon Nova Lite | $0.000063 | $0.000252 |
+| Titan Text Embeddings V2 | $0.000026004 | Not applicable |
+
+The recorder limits combined model/embedding attempts to 20, document pages to five, model input
+to 24,000 characters, and model output to 4,096 tokens. A conservative worksheet allowing twenty
+Nova calls at 60,000 input tokens plus twenty 8,192-token embedding calls totals **under $0.11** at
+these rates. This deliberately exceeds the combined attempt limit and expected input size. It is a
+planning estimate, not a guaranteed maximum charge. Failed or interrupted calls can still incur
+charges; reconcile recorded usage with AWS billing. The approved $10 is sufficient for this short
+run, but does not authorize additional infrastructure or a plan upgrade.
+
+## Earlier hosting estimate, checked November 25, 2026
 
 The user selected the Free plan and local OCR. AWS lists **t3.small** among its
 [Free-plan eligible compute types](https://aws.amazon.com/free/compute/). The default now uses that
@@ -15,8 +38,9 @@ so local Tesseract replaces it in the selected deployment. No account upgrade is
 
 The [Free plan](https://aws.amazon.com/free/) uses credits and ends after six months or when credits
 run out. Credits are not unlimited service usage. Keep the plan unchanged and check the current
-balance in Billing. The proposed **$10 allowance is credit consumption**, with **$0 out-of-pocket**;
-it is awaiting the user's agreement. The app's budget variable tracks that allowance, not a cash bill.
+balance in Billing. The agreed **$10 allowance is credit consumption**, with **$0 out-of-pocket**.
+The app's budget variable tracks that allowance, not a cash bill. These earlier hosting tables are
+illustrative; reprice all components in the selected Region before a deployment.
 
 | Default component | 730-hour month | 32 hours, storage kept all month |
 |---|---:|---:|
