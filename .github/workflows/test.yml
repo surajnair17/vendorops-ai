@@ -16,7 +16,7 @@ jobs:
       - run: pip install --require-hashes -r backend/requirements-lock.txt -r frontend/requirements-lock.txt
       - run: pip install -r backend/requirements-dev.txt -r backend/requirements-cloud.txt -r frontend/requirements-dev.txt
       - run: mkdir -p backend/artifacts && python -m pip_audit --local --strict --progress-spinner off --format json --output backend/artifacts/dependency-audit.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: dependency-audit
@@ -30,7 +30,7 @@ jobs:
       - run: python -m backend.scripts.evaluate
       - run: python -m backend.scripts.evaluate_retrieval
       - run: python -m backend.scripts.evaluate_ocr
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: offline-evaluation
           path: backend/artifacts/*evaluation.json
@@ -76,7 +76,7 @@ jobs:
       - run: npm --prefix backend/infra/guard test
       - name: Publish findings for review; this is not a compliance pass
         run: npm --prefix backend/infra/guard run check -- --report-only
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: aws-guard-findings
           path: backend/artifacts/aws/guard/report.sarif.json
