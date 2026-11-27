@@ -10,7 +10,7 @@ jobs:
       VENDOROPS_LIVE_SEND_ENABLED: 'false'
       AWS_EC2_METADATA_DISABLED: 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with: {python-version: '3.13'}
       - run: pip install --require-hashes -r backend/requirements-lock.txt -r frontend/requirements-lock.txt
@@ -37,7 +37,7 @@ jobs:
   infrastructure:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with: {python-version: '3.13'}
       - run: pip install -r backend/infra/requirements.txt
@@ -60,8 +60,8 @@ jobs:
     name: AWS Guard advisory report
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
           repository: aws-cloudformation/aws-guard-rules-registry
           ref: 7f7340c26ae5d5e8874651dbffeb12e0e9f505b6
