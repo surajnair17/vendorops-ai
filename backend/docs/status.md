@@ -4,11 +4,11 @@
 
 | Area | Latest observed result |
 | --- | --- |
-| Local tests | 118 tests passed; Ruff lint and formatting passed |
+| Local tests | 118 Python tests and four Guard runner checks passed; Ruff lint and formatting passed |
 | Browser walkthrough | [2 minute 18 second recording](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4), real local OCR, fixture AI, simulated email |
 | HTTP and frontend | Real-server upload/review smoke and actual Chrome walkthrough passed |
-| CI | Offline tests and Linux container build/startup passed for `960a16b`; current runs are in GitHub Actions |
-| AWS | Free plan, sign-in, model access, and network verified; five inference quotas remain zero; SES verification requested |
+| CI | Offline tests, Linux container build/startup, and the Guard advisory job passed for `0294db8` |
+| AWS | Free plan, sign-in, model access, network, and SES email identity verified; five inference quotas remain zero |
 | Cloud release | Deployment, live AI accuracy, and real inbox delivery remain unverified |
 
 The sections below retain milestone evidence. Older entries describe the state at their checkpoint;
@@ -48,6 +48,9 @@ remain excluded from Git.
   Strict validation returns 1; CI publishes an advisory report without claiming compliance.
   Live extraction/retrieval quality, inbox arrival, and host recovery remain unverified until AWS
   quotas and the remaining deployment gates are resolved.
+- The November 28 read-only preflight confirms the SES identity is now verified. A synthetic SES
+  test draft is stored in an isolated workspace as `pending_review`, with no approval, queued send,
+  or delivery. Its exact content has been presented for explicit approval. No model calls were retried.
 
 <details>
 <summary><strong>Milestone evidence and historical decisions</strong></summary>
