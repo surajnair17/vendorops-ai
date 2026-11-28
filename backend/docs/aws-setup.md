@@ -128,6 +128,13 @@ mismatch stops checks before other services are inspected. The credit balance is
 the checker does not independently validate it. Passing read checks still does not prove invocation
 success, extraction accuracy, or inbox arrival.
 
+The Bedrock preflight requires positive Nova Lite token/request quotas and Titan's **requests per
+minute** quota. AWS documents embedding models as RPM-throttled; a legacy Titan tokens-per-minute
+entry is not an invocation prerequisite. See [Titan embedding quotas](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html).
+Historical receipts retain all five previously queried values; the current checker uses four
+applicable quota checks. A positive read-only result must still be followed by a bounded real
+extraction and embedding test.
+
 The plan displays configuration, resources, estimated hosting, remaining blockers, and a review
 digest covering configuration, template, bootstrap, Compose files, Dockerfiles, and runtime
 requirements. Changing them changes the digest. Deployment also checks that these files match the

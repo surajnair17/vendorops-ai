@@ -12,7 +12,10 @@ from pathlib import Path
 
 QUOTAS = {
     "amazon.nova-lite-v1:0": ("L-70423BF8", "L-E386A278", "L-45E0AD92"),
-    "amazon.titan-embed-text-v2:0": ("L-DE641971", "L-26C560CE"),
+    # AWS documents embeddings as RPM-throttled, not TPM-throttled. A legacy
+    # token-quota entry must not block an otherwise usable embedding model.
+    # https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html
+    "amazon.titan-embed-text-v2:0": ("L-26C560CE",),
 }
 
 
