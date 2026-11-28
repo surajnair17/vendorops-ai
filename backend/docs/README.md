@@ -4,6 +4,11 @@
 
 Choose a path based on what you want to do. All terminal commands assume the repository root.
 
+**Reviewing the project?** [Watch the actual workflow](demo.md#recorded-walkthrough),
+then read the [architecture](architecture.md) and [verification evidence](status.md).
+**Building along?** Start with [local setup](../../README.md#quick-start) and the
+[learning workbook](learning.md). The application runs offline before any cloud setup.
+
 ## Run and explore
 
 | Guide | What it covers |

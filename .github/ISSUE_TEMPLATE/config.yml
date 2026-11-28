@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Setup and documentation
+    url: https://github.com/surajnair17/vendorops-ai/blob/main/backend/docs/README.md
+    about: Start the local demo, inspect the architecture, or find the right guide.
+  - name: Report a security vulnerability privately
+    url: https://github.com/surajnair17/vendorops-ai/security/advisories/new
+    about: Keep security reproductions and sensitive information out of public issues.

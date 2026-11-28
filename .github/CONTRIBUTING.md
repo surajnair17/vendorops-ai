@@ -3,6 +3,19 @@
 Start with the [quick start](../README.md#quick-start), then follow the
 [documentation hub](../backend/docs/README.md). Use synthetic documents when developing or reporting issues.
 
+## Find a useful first contribution
+
+- Improve a setup explanation after reproducing it in a fresh environment.
+- Add a synthetic document that exposes an unsupported layout or a useful edge case.
+- Improve a review screen's labels, keyboard navigation, or narrow-screen layout.
+- Add an independently calculated financial example to the evaluation set.
+
+For a larger feature, [describe the concrete workflow first](https://github.com/surajnair17/vendorops-ai/issues/new?template=feature_request.yml).
+Include what the operator should see and how the result can be verified. The
+[roadmap](../backend/docs/roadmap.md) and [current scope](../README.md#verification-and-current-scope)
+explain the supported boundaries. Report security issues through
+[private vulnerability reporting](https://github.com/surajnair17/vendorops-ai/security/advisories/new).
+
 ## Where changes belong
 
 - `backend/routes/`: HTTP contracts and request validation.

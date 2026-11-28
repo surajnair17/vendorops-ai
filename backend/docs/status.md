@@ -5,9 +5,9 @@
 | Area | Latest observed result |
 | --- | --- |
 | Local tests | 150 Python tests passed; Ruff lint and formatting passed; four existing Guard checks remain in CI |
-| Browser walkthrough | [2 minute 18 second recording](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4), real local OCR, fixture AI, simulated email |
+| Browser walkthrough | Fresh [2 minute 41 second recording](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4) after hardening: real local OCR, fixture AI, simulated email |
 | HTTP and frontend | Real-server upload/review smoke and actual Chrome walkthrough passed |
-| CI | Offline tests, Linux container build/startup, and the Guard advisory job passed for `0294db8` |
+| CI | [Hardening release `6bf69d7`](https://github.com/surajnair17/vendorops-ai/actions/runs/46069042058): offline tests, Linux container workflow, and Guard advisory report passed; advisory success is not a compliance pass |
 | AWS | Free plan, sign-in, model access, network, and SES email identity verified; five inference quotas remain zero |
 | Live SES | One approved real send reached Gmail Spam; provider ID matched; Inbox placement failed |
 | Recovery | Local backup restored both source PDFs and the sent action; restart did not resend |
@@ -18,13 +18,13 @@
 The sections below retain milestone evidence. Older entries describe the state at their checkpoint;
 the current snapshot and latest live attempt take precedence when interpreting status.
 
-The presentation refresh publishes the reviewed synthetic demo, its media manifest, and a complete
-quotation screenshot. The four still captures passed the actual Chrome walkthrough and a 390px
-mobile layout check. GitHub rendered the README successfully; all 103 local documentation links
-and anchors resolved before the direct-download links replaced the repository's video-preview links.
-The repository About description and topics now include quotation review
-and the recorded demo. Credentials, private documents, detailed run receipts, and runtime data
-remain excluded from Git.
+The November 28 presentation refresh puts the recorded example, practical financial checks, local
+Docker setup, and engineering decisions first. A new isolated Chrome run completed the full local
+workflow with three documents, two successful jobs, and exactly one approved simulated delivery.
+All 4,030 video frames decoded, and sampled frames were visually reviewed. Its
+[public manifest](assets/demo-manifest.json) records provider modes and a SHA-256 hash. The still
+screenshots remain a separate synthetic capture with no deliveries. Credentials, private documents,
+detailed run receipts, and runtime data remain excluded from Git.
 
 ## Hardening pass
 

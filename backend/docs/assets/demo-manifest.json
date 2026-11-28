@@ -1,15 +1,17 @@
 {
   "title": "VendorOps AI: completed local portfolio walkthrough",
-  "recorded_on": "2026-11-27",
+  "recorded_on": "2026-11-28",
+  "assessment_as_of": "2026-11-27",
   "status": "completed",
   "file": "vendorops-demo.mp4",
-  "sha256": "68a9849af1288d653109e928a6fc87fe7ac7675240748114bad793c771a33953",
-  "duration_seconds": 138.48,
+  "sha256": "1a2defdccc0fab09f2c0a13e217051208c374e8bd9cc0aa46768c482ac9ed0e5",
+  "duration_seconds": 161.2,
   "resolution": [
     1440,
     1000
   ],
   "frames_per_second": 25.0,
+  "decoded_frames": 4030,
   "codec": "h264",
   "audio": false,
   "data": "synthetic documents only",
@@ -32,6 +34,60 @@
     "quote_assessment": "checks_passed",
     "recording_processes_stopped": true
   },
+  "chapters": [
+    {
+      "seconds": 13.1,
+      "title": "1. Digital PDF extraction"
+    },
+    {
+      "seconds": 25.0,
+      "title": "2. Structure the purchase order"
+    },
+    {
+      "seconds": 34.9,
+      "title": "3. Upload a scanned invoice"
+    },
+    {
+      "seconds": 43.6,
+      "title": "4. Review OCR and structure the invoice"
+    },
+    {
+      "seconds": 47.0,
+      "title": "Review source evidence"
+    },
+    {
+      "seconds": 53.8,
+      "title": "5. Match and compare"
+    },
+    {
+      "seconds": 66.1,
+      "title": "6. Add policy evidence"
+    },
+    {
+      "seconds": 76.3,
+      "title": "7. Apply the confirmed rule"
+    },
+    {
+      "seconds": 86.0,
+      "title": "8. Draft and review"
+    },
+    {
+      "seconds": 99.1,
+      "title": "9. Approve the exact revision"
+    },
+    {
+      "seconds": 112.0,
+      "title": "10. Durable delivery and history"
+    },
+    {
+      "seconds": 121.1,
+      "title": "11. Review a quotation"
+    },
+    {
+      "seconds": 137.8,
+      "title": "12. Verify outcomes"
+    }
+  ],
   "live_aws_calls_enabled": false,
   "real_email_sent": false,
   "limitations": [

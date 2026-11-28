@@ -2,22 +2,30 @@
 
 ## Recorded walkthrough
 
-**[Download the captioned demo (MP4, 2 min 18 sec)](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4)**
+**[Open the captioned demo (MP4, 2 min 41 sec)](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4)**
 
 [![Completed local demonstration showing fixture mode and simulated delivery](assets/demo-preview.png)](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4)
 
-The recording was captured from the actual local Streamlit application on November 27, 2026,
-using isolated synthetic documents. It has on-screen chapter captions and no audio.
+Recorded from the actual local Streamlit application on **November 28, 2026**, after the hardening
+release, using an isolated database and synthetic documents. It has on-screen chapter captions and
+no audio. The quotation assessment deliberately uses the fixed example date **November 27, 2026**;
+the opening card displays that assessment date.
 
 | Approximate position | What happens |
 | --- | --- |
 | 00:00 | Introduce the workflow and declare fixture AI, real local OCR, and simulated email |
-| 00:11 | Upload a digital PDF and structure the synthetic purchase order |
-| 00:28 | Upload an image-only invoice, run Tesseract, and save reviewed fields |
-| 00:44 | Detect the unit-price variance, index policy evidence, and confirm a 5% rule |
-| 01:10 | Draft and edit a follow-up, approve its exact revision, then execute it |
-| 01:38 | Inspect simulated delivery history and assess a quotation's terms and arithmetic |
-| 01:58 | Verify three documents, two successful jobs, and one completed simulated action |
+| 00:13 | Upload a digital invoice PDF and read its text over HTTP |
+| 00:25 | Store and structure the synthetic purchase order |
+| 00:35 | Upload an image-only invoice and run real Tesseract OCR |
+| 00:47 | Correct uncertain OCR extraction as a human-reviewed revision |
+| 00:54 | Detect the 12.50 → 13.50 unit-price difference |
+| 01:06 | Index policy evidence, activate the policy, and confirm a 5% rule |
+| 01:16 | Apply the confirmed rule while preserving the observed variance |
+| 01:26 | Draft and edit a request for a corrected invoice |
+| 01:39 | Approve the exact content revision, then execute the action |
+| 01:52 | Inspect the single simulated delivery and approval history |
+| 02:01 | Review a quotation's expiry, payment terms, tax, and totals |
+| 02:18 | Verify three documents, two successful jobs, and one completed simulated action |
 
 | Component | Evidence in this recording |
 | --- | --- |
@@ -28,12 +36,19 @@ using isolated synthetic documents. It has on-screen chapter captions and no aud
 | Delivery | One simulated attempt, bound to approval of the edited content revision |
 | Quotation | Saved assessment reports `checks_passed` for supported dates and arithmetic |
 
-This recording demonstrates local workflow behavior. A later, separate [live SES check](live-verification.md)
-reached Gmail Spam; it is not shown in this video. Live model accuracy, cloud deployment, and Inbox
+This recording demonstrates local workflow behavior. The separate [live S3 and SES checks](live-verification.md)
+are documented with their own evidence; the real email reached Gmail Spam. These checks are not shown
+in this video. Live model accuracy, cloud deployment, and Inbox
 placement remain unverified. The AWS inference attempt was throttled by zero regional quotas; see the
 [verification record](status.md). The public [media manifest](assets/demo-manifest.json) records
 provider modes, observed outcomes, and the video's SHA-256. Private source files and runtime logs
 are excluded from the repository.
+
+**Recording validation:** all **4,030 frames** decoded successfully at 25 fps, and sampled frames
+were visually reviewed. The actual run receipt confirms a successful OCR job, cited policy evidence,
+the outside-tolerance classification, approval matching the sent content revision, exactly one
+simulated delivery attempt, and a passing quotation assessment. All three temporary application
+processes stopped afterward. The MP4 is approximately **2.8 MB** and uses H.264 with fast-start metadata.
 
 To make another recording, follow the [recorder instructions](../../frontend/README.md#record-an-end-to-end-walkthrough).
 

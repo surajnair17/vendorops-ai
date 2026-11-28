@@ -104,8 +104,11 @@ Remaining release evidence:
 
 - Resolve the inference quotas, then measure actual extraction and retrieval on held-out examples.
 - Review and explicitly deploy the private host; verify its health, access, restart, and recovery.
-- Demonstrate aligned sender-domain authentication and check actual Inbox placement.
 - Record the full live workflow after its missing stages succeed; retain the existing video's fixture labels.
+
+The owner chose verified-address sandbox delivery without a custom domain. Sender-domain
+authentication and Inbox placement remain future improvements; the observed Gmail Spam result
+stays a documented limitation of this demonstration.
 
 The existing [recording](demo.md#recorded-walkthrough) remains a local demonstration with real OCR,
 fixture AI, and simulated email. It does not show these later S3 and SES tests. Service charges have not been
