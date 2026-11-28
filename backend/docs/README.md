@@ -13,6 +13,7 @@ then read the [architecture](architecture.md) and [verification evidence](status
 
 | Guide | What it covers |
 | --- | --- |
+| [Portfolio demo release](release-notes.md) | Versioned snapshot, included workflow, verification evidence, and unfinished cloud scope |
 | [Watch the demo](demo.md#recorded-walkthrough) | A captioned 2-minute local workflow, chapters, provider modes, and observed outcomes |
 | [Quick start](../../README.md#quick-start) | Install dependencies, start the three processes, and seed a demo |
 | [Guided demo](demo.md) | A ten-minute walkthrough using synthetic vendor documents |

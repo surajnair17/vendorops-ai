@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&amp;logoColor=white" alt="Python 3.13">
   <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&amp;logoColor=white" alt="FastAPI">
   <img src="https://img.shields.io/badge/Streamlit-FF4B4B?logo=streamlit&amp;logoColor=white" alt="Streamlit">
-  <a href="backend/docs/hardening.md"><img src="https://img.shields.io/badge/Verified-150_tests-0f766e" alt="150 Python tests passed in the November 28 verification"></a>
+  <a href="backend/docs/release-notes.md"><img src="https://img.shields.io/badge/Release-Portfolio_demo-0f766e" alt="Portfolio demo release and verified scope"></a>
 </p>
 
 <p align="center">
@@ -35,6 +35,11 @@ reviews the evidence before approving a corrected-invoice request.
 
 **Start here:** [Watch the walkthrough](#see-it-in-action) · [Run the app](#quick-start) ·
 [Inspect the engineering](backend/docs/architecture.md) · [Check the evidence](backend/docs/status.md)
+
+**Portfolio demo release:** [What's included](backend/docs/release-notes.md) ·
+[Download a versioned snapshot](https://github.com/surajnair17/vendorops-ai/releases/tag/v0.1.0-demo).
+The local workflow is ready to explore. Real S3 recovery and SES sending have been verified separately;
+live AI and AWS hosting remain pending.
 
 ## See it in action
 
@@ -337,6 +342,9 @@ Nova Lite and Titan inference quotas were zero. Three runtime attempts were thro
 preflight now blocks further live recordings before inference when quotas are unavailable. The
 Free plan remains selected. [AWS setup and quota checks](backend/docs/aws-setup.md#5-verify-each-live-service-separately).
 The separate live S3 and SES checks passed; they do not establish live model accuracy.
+The subsequent [Mumbai and Hyderabad review](backend/docs/live-verification.md#regional-alternatives-reviewed)
+did not establish a usable replacement configuration. Sydney remains selected; no plan upgrade or
+Region migration was performed.
 
 ## Explore further
 
