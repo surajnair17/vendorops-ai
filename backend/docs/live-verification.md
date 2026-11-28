@@ -63,9 +63,17 @@ The project remains on the Free plan with no cross-Region inference.
 The subsequent preflight correction checks Titan's request quota only: AWS now explicitly documents
 embedding models as [RPM-throttled](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html).
 The five values above are the historical observation, not five current inference prerequisites.
-Titan's request quota and Nova's applicable quotas were still zero at that observation. The latest
-completion attempt encountered an expired login before any fresh quota values could be read;
-it made no model calls or resource changes.
+After the operator renewed sign-in, the read-only preflight at **2026-11-28 05:38 UTC** confirmed
+the Free plan and authorized regional model access again. All four applicable quotas remained
+zero and non-adjustable. The deployment check also passed the operator, VPC/subnet route, and
+verified SES identity checks, with no configuration blockers. No inference calls or resources
+were created during this recheck.
+
+A broader paginated Service Quotas inventory returned 822 entries. Among the 181 entries matching
+on-demand/model token limits, embedding request limits, or Mantle, the only positive entry was the
+shared Cross-Model Max Tokens Per Day ceiling. No usable model-specific positive quota was found;
+the shared ceiling alone does not establish model readiness. The private Support draft was updated
+with these observations and Titan's RPM-only requirement; it has not been submitted.
 
 ## Live S3 storage and recovery
 
