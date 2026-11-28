@@ -4,12 +4,12 @@
 
 | File | Source |
 | --- | --- |
-| `banner.svg` | Original vector illustration for this repository; contains no external assets |
+| `banner.svg` | Original vector illustration with a labelled illustrative 8% price-variance example; contains no external assets |
 | `extraction.png` | Actual local Streamlit upload and text-extraction result |
 | `document-review.png` | Actual local review screen with fixture-derived synthetic invoice data |
 | `quotation-review.png` | Actual local quotation screen showing expiry, payment terms, and passing arithmetic checks |
 | `operations.png` | Actual local metrics after seeding three digital documents and one unapproved draft |
-| `vendorops-demo.mp4` | Actual 2 minute 18 second browser recording of the complete synthetic local workflow |
+| `vendorops-demo.mp4` | Actual 2 minute 41 second browser recording made on November 28, 2026, after the hardening release |
 | `demo-preview.png` | Unmodified frame from that video, showing three documents, two completed jobs, and one simulated action |
 | `demo-manifest.json` | Reviewed public media metadata and observed counts derived from the isolated run receipt |
 
@@ -25,9 +25,11 @@ one simulated delivery, checks a fixture quotation, and displays operations. No 
 The reviewed public copy contains only synthetic examples and a test address. It contains no AWS
 credentials, project identifiers, private quotations, browser sign-in, or customer documents.
 
-The video is H.264, 1440 × 1000, 25 fps, with on-screen captions and no audio. It decoded completely,
-and frames were inspected before publication. The [manifest](demo-manifest.json) contains its hash
-and provider provenance; the full database, run receipt, and logs remain ignored local artifacts.
+The video is H.264, 1440 × 1000, 25 fps, with on-screen captions and no audio. All 4,030 frames decoded,
+and sampled frames were visually inspected before publication. The preview is an unmodified frame
+at 02:25. The [manifest](demo-manifest.json) contains its hash, approximate chapter positions, fixed
+assessment date, and provider provenance; the full database, run receipt, and logs remain ignored
+local artifacts. The recording date is November 28; its example quotation assessment date is November 27.
 
 See [preview instructions](../../../frontend/README.md#preview-assets) to regenerate the stills and
 [recording instructions](../../../frontend/README.md#record-an-end-to-end-walkthrough) to film another run.
