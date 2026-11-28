@@ -75,6 +75,26 @@ shared Cross-Model Max Tokens Per Day ceiling. No usable model-specific positive
 the shared ceiling alone does not establish model readiness. The private Support draft was updated
 with these observations and Titan's RPM-only requirement; it has not been submitted.
 
+## Regional alternatives reviewed
+
+At the owner's request, a read-only review on November 28 checked Mumbai and Hyderabad before
+changing application configuration. These observations are specific to this project and time:
+
+| Region | Observed result |
+| --- | --- |
+| Mumbai (`ap-south-1`) | Enabled by default. Both models reported authorized access, but Nova Lite did not list direct `ON_DEMAND` inference. Titan did. All four quota reads returned `AccessDeniedException`, so their values are unknown. |
+| Hyderabad (`ap-south-2`) | EC2's Region inventory reported `not-opted-in`. No model calls or resource creation were attempted there. |
+
+AWS documents an exception allowing Bedrock APIs that do not create resources in other
+default-enabled commercial Regions. This does not move the project's infrastructure or prove
+that a particular model can be invoked. See [AWS project Regions](https://docs.aws.amazon.com/accounts/latest/reference/project-regions.html).
+Enabling additional infrastructure Regions through advanced features requires a plan upgrade;
+activation is irreversible and removes managed spend limits. See [advanced features](https://docs.aws.amazon.com/accounts/latest/reference/activate-advanced-features.html).
+
+No inference was attempted in Mumbai. Its denied quota reads are not evidence of zero quotas.
+No settings were changed: the Free plan, Sydney deployment configuration, local OCR, and disabled
+live-call defaults remain in place. Changing Region alone was not a verified fix for this release.
+
 ## Live S3 storage and recovery
 
 The owner explicitly approved the reviewed S3-only plan and cleanup. The test created one private,
