@@ -60,6 +60,13 @@ runtime inference calls. Raising the local $10 allowance cannot change an AWS qu
 Support request has been prepared for the project owner; it has not been submitted on their behalf.
 The project remains on the Free plan with no cross-Region inference.
 
+The subsequent preflight correction checks Titan's request quota only: AWS now explicitly documents
+embedding models as [RPM-throttled](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html).
+The five values above are the historical observation, not five current inference prerequisites.
+Titan's request quota and Nova's applicable quotas were still zero at that observation. The latest
+completion attempt encountered an expired login before any fresh quota values could be read;
+it made no model calls or resource changes.
+
 ## Live S3 storage and recovery
 
 The owner explicitly approved the reviewed S3-only plan and cleanup. The test created one private,

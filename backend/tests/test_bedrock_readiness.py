@@ -72,6 +72,28 @@ def test_readiness_checks_project_identity_and_does_not_invoke_models():
     assert "123456789012" not in str(report)
 
 
+def test_embedding_readiness_uses_rpm_without_querying_legacy_token_quota():
+    aws = ReadOnlyAWS()
+    requested = []
+    original = aws.get_service_quota
+
+    def quota(**kwargs):
+        requested.append(kwargs["QuotaCode"])
+        if kwargs["QuotaCode"] == "L-DE641971":
+            raise AssertionError("Embedding TPM is not an inference gate")
+        return original(**kwargs)
+
+    aws.get_service_quota = quota
+    report = check(client_factory=aws.client)
+    assert report["ready"]
+    assert "L-26C560CE" in requested
+    aws.zero_quota = "L-26C560CE"
+    report = check(client_factory=aws.client)
+    assert not report["ready"]
+    blocked = [row for row in report["checks"] if row["status"] == "blocked"]
+    assert len(blocked) == 1 and blocked[0]["quota_code"] == "L-26C560CE"
+
+
 def test_denied_or_missing_read_access_blocks_without_leaking_error_messages():
     aws = ReadOnlyAWS()
 
