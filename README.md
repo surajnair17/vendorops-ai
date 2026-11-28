@@ -1,130 +1,135 @@
 <p align="center">
-  <img src="backend/docs/assets/banner.svg" alt="VendorOps AI — extract vendor documents, check the numbers, approve the next step" width="100%">
+  <img src="backend/docs/assets/banner.svg" alt="VendorOps AI — extract the document, check the numbers, approve the next step" width="100%">
 </p>
 
 <p align="center">
-  <a href="https://github.com/surajnair17/vendorops-ai/actions/workflows/test.yml"><img src="https://github.com/surajnair17/vendorops-ai/actions/workflows/test.yml/badge.svg?branch=main" alt="Offline tests and container checks"></a>
+  <strong>A document review workspace for purchasing teams.</strong><br>
+  Turn invoices, purchase orders, and quotations into evidence you can review and decisions you can trace.
+</p>
+
+<p align="center">
+  <a href="https://github.com/surajnair17/vendorops-ai/actions/workflows/test.yml"><img src="https://github.com/surajnair17/vendorops-ai/actions/workflows/test.yml/badge.svg?branch=main" alt="Tests and container checks"></a>
+  <a href="https://github.com/surajnair17/vendorops-ai/releases/tag/v0.1.0-demo"><img src="https://img.shields.io/badge/release-v0.1.0--demo-0f766e" alt="Portfolio demo release v0.1.0-demo"></a>
   <img src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&amp;logoColor=white" alt="Python 3.13">
   <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&amp;logoColor=white" alt="FastAPI">
   <img src="https://img.shields.io/badge/Streamlit-FF4B4B?logo=streamlit&amp;logoColor=white" alt="Streamlit">
-  <a href="backend/docs/release-notes.md"><img src="https://img.shields.io/badge/Release-Portfolio_demo-0f766e" alt="Portfolio demo release and verified scope"></a>
 </p>
 
 <p align="center">
-  <a href="#see-it-in-action">Demo video</a> ·
-  <a href="#quick-start">Run locally</a> ·
-  <a href="#how-it-works">Architecture</a> ·
-  <a href="#verification-and-current-scope">Verification</a> ·
-  <a href="backend/docs/README.md">Documentation</a> ·
-  <a href="backend/docs/learning.md">Learn</a>
+  <a href="#see-it-in-action"><strong>Watch the demo</strong></a> &nbsp;·&nbsp;
+  <a href="#quick-start"><strong>Run locally</strong></a> &nbsp;·&nbsp;
+  <a href="backend/docs/README.md"><strong>Read the docs</strong></a> &nbsp;·&nbsp;
+  <a href="https://github.com/surajnair17/vendorops-ai/releases/tag/v0.1.0-demo"><strong>Get the release</strong></a>
 </p>
 
-## Vendor documents. Decisions you can explain.
+---
 
-**VendorOps AI is a Python workspace for reviewing invoices, purchase orders, and quotations.**
-Read digital and scanned PDFs, check financial differences, retrieve purchasing-policy evidence,
-and approve a follow-up with a traceable history. Built with FastAPI, Streamlit, and SQLite.
+## From paperwork to a reviewed next step
 
-**The example:** a purchase order says **$12.50** per box; the invoice says **$13.50**.
-Python calculates the **8% variance**, a confirmed policy sets a **5% tolerance**, and the operator
-reviews the evidence before approving a corrected-invoice request.
+A supplier invoices **$13.50 per box** against a purchase order for **$12.50**.
+VendorOps calculates the **8% difference**, checks it against a human-confirmed **5% tolerance**,
+and prepares the evidence for review before a follow-up is approved.
 
-> **Try it without AWS credentials.** The local demo uses real PDF parsing and Tesseract OCR,
-> fixture AI responses, and simulated email. Live calls are off by default. This is a private-demo
-> portfolio PoC; [live AWS results and remaining gates](backend/docs/live-verification.md) are documented separately.
+| 01 · Read | 02 · Check | 03 · Act |
+| :--- | :--- | :--- |
+| Extract PDFs and scans. Review fields beside their source. | Compare prices and quantities. Check quote terms and policy evidence. | Edit a draft. Approve its exact revision. Track delivery and history. |
 
-**Start here:** [Watch the walkthrough](#see-it-in-action) · [Run the app](#quick-start) ·
-[Inspect the engineering](backend/docs/architecture.md) · [Check the evidence](backend/docs/status.md)
-
-**Portfolio demo release:** [What's included](backend/docs/release-notes.md) ·
-[Download a versioned snapshot](https://github.com/surajnair17/vendorops-ai/releases/tag/v0.1.0-demo).
-The local workflow is ready to explore. Real S3 recovery and SES sending have been verified separately;
-live AI and AWS hosting remain pending.
+> [!NOTE]
+> **Runs without AWS credentials.** The local demo uses real PDF parsing and Tesseract OCR,
+> fixture AI responses, lexical policy retrieval, and simulated email. Live AI and AWS hosting
+> remain pending. [Verified scope and cloud results](#verification-and-current-scope).
 
 ## See it in action
 
-[![Download the local demo: three documents, two completed jobs, and an approved simulated follow-up](backend/docs/assets/demo-preview.png)](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4)
+<p align="center">
+  <a href="https://github.com/surajnair17/vendorops-ai/releases/download/v0.1.0-demo/vendorops-demo.mp4">
+    <img src="backend/docs/assets/demo-preview.png" alt="Recorded application: three reviewed documents, two completed jobs, and one approved simulated follow-up" width="100%">
+  </a>
+</p>
 
-**[Open the complete walkthrough · MP4 · 2 min 41 sec](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4)**
+<p align="center">
+  <a href="https://github.com/surajnair17/vendorops-ai/releases/download/v0.1.0-demo/vendorops-demo.mp4"><strong>▶ Watch the complete workflow · 2 min 41 sec</strong></a><br>
+  <sub>Captioned MP4 · Synthetic documents · Real local OCR · Fixture AI · Simulated delivery</sub>
+</p>
 
-| Read | Reason | Act |
-| --- | --- | --- |
-| Digital PDF → scanned-invoice OCR → reviewed fields | Invoice/PO difference → cited policy → confirmed tolerance | Edited draft → exact approval → simulated delivery → audit history |
-
-The walkthrough also checks a quotation's expiry, payment terms, taxable amount, and totals.
-
-The recording uses **real PDF parsing and local Tesseract OCR**, **fixture AI extraction and lexical
-retrieval**, and **simulated email**. The scanned invoice is explicitly saved as a human-reviewed
-revision. It uses synthetic documents throughout. [Chapters and evidence](backend/docs/demo.md#recorded-walkthrough)
-· [Reproduce the recording](frontend/README.md#record-an-end-to-end-walkthrough).
+The walkthrough covers a digital PO, scanned invoice, quotation checks, a cited policy, and one
+approved follow-up. The scanned record is human-reviewed.
+[Chapters and evidence](backend/docs/demo.md#recorded-walkthrough) ·
+[Recording manifest](backend/docs/assets/demo-manifest.json).
 
 <details>
-<summary><strong>Explore the application screens</strong></summary>
+<summary><strong>Explore the workspace — four application screens</strong></summary>
 
-Digital PDF upload and text extraction:
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>Read the source</strong><br><sub>PDF text and document metrics.</sub><br><br>
+      <a href="backend/docs/assets/extraction.png"><img src="backend/docs/assets/extraction.png" alt="Digital invoice text extraction screen" width="100%"></a>
+    </td>
+    <td width="50%" valign="top">
+      <strong>Review the record</strong><br><sub>Source text beside editable fields.</sub><br><br>
+      <a href="backend/docs/assets/document-review.png"><img src="backend/docs/assets/document-review.png" alt="Document workspace with source text and structured fields" width="100%"></a>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>Assess a quotation</strong><br><sub>Validity, terms, tax, and totals.</sub><br><br>
+      <a href="backend/docs/assets/quotation-review.png"><img src="backend/docs/assets/quotation-review.png" alt="Quotation review with terms and arithmetic checks" width="100%"></a>
+    </td>
+    <td width="50%" valign="top">
+      <strong>Follow the workflow</strong><br><sub>Documents, jobs, and action states.</sub><br><br>
+      <a href="backend/docs/assets/operations.png"><img src="backend/docs/assets/operations.png" alt="Operational metrics in the seeded local demo" width="100%"></a>
+    </td>
+  </tr>
+</table>
 
-![Actual local application extracting a synthetic invoice, with source text and document metrics](backend/docs/assets/extraction.png)
-
-Source text and editable structured data, side by side:
-
-![Document workspace showing a synthetic invoice and its structured extraction](backend/docs/assets/document-review.png)
-
-Quotation dates, terms, tax, and arithmetic for the saved revision:
-
-![Quotation review showing fixture provenance, validity, payment terms, and supported financial checks](backend/docs/assets/quotation-review.png)
-
-Counts from the running local demonstration:
-
-![Operational metrics showing fixture mode, three documents, and an unapproved draft](backend/docs/assets/operations.png)
+Select any image to view it at full size. These screenshots use a separate seeded demo with an
+unapproved draft and no deliveries. [Asset provenance](backend/docs/assets/README.md).
 
 </details>
 
-The still screenshots use a separate seeded demo with an unapproved draft and no deliveries.
-The video executes one approved simulated delivery. [Asset provenance](backend/docs/assets/README.md)
-· [Reproduce the screenshots](frontend/README.md#preview-assets).
-
 ## What you can do
 
-| Step | Capability |
-| --- | --- |
-| **Extract** | Read digital PDFs and run local Tesseract OCR on scanned pages. |
-| **Review** | Inspect source text beside validated fields; retain corrections as new revisions. |
-| **Assess quotes** | Review expiry and payment terms; check stated line totals, taxable amounts, tax, and totals. |
-| **Compare** | Match an invoice to a purchase order and calculate differences with Python `Decimal`. |
-| **Check policy** | Retrieve cited passages and apply only human-confirmed rules. |
-| **Approve** | Edit a follow-up draft, approve its exact content, then explicitly execute delivery. |
-| **Trace** | Inspect audit history, job outcomes, usage records, and evaluation results. |
-
-### Engineering choices behind the workflow
-
-- **Evidence travels with the result.** Field references, policy passages, and exact document revisions remain attached to findings.
-- **Python calculates the money.** `Decimal` arithmetic and confirmed rules produce reproducible financial checks.
-- **Approval follows the content.** Editing an email invalidates approval; source corrections make dependent reports stale.
-- **Retries preserve uncertainty.** Durable jobs record delivery attempts; uncertain sends require reconciliation before another attempt.
+| Capability | What it gives the reviewer |
+| :--- | :--- |
+| **PDF + OCR** | Digital text and scanned-page OCR, with the source available for inspection. |
+| **Structured review** | Validated fields, visible uncertainty, and corrections saved as new revisions. |
+| **Invoice ↔ PO comparison** | Reproducible quantity, price, and total checks using Python `Decimal`. |
+| **Quotation assessment** | Expiry, payment terms, stated tax, taxable amounts, and arithmetic checks. |
+| **Policy evidence** | Cited passages and executable rules that require human confirmation. |
+| **Approval workflow** | Editable drafts, exact-revision approval, durable jobs, and audit history. |
 
 ## Quick start
 
-Choose **Docker Compose** for the complete stack with Tesseract included, or **Python 3.13** for
-native development. Run commands from the repository root.
+**Docker Compose** starts the API, interface, and worker with Tesseract included.
+Run these commands from a terminal with Git and Docker installed:
 
 ```bash
 git clone https://github.com/surajnair17/vendorops-ai.git
 cd vendorops-ai
 ```
 
-### Docker Compose
-
-Copy `backend/.env.example` to `backend/.env` once, keeping its offline defaults. Then run:
+Copy `backend/.env.example` to `backend/.env` once, keeping its offline defaults.
+Then start the stack and load the synthetic example:
 
 ```bash
 docker compose -f backend/infra/compose.yaml up --build -d
+docker compose -f backend/infra/compose.yaml exec backend python -m backend.scripts.demo
 ```
 
-Open **[the app](http://localhost:8501)** and **[API docs](http://127.0.0.1:8000/docs)**.
-The stack starts the API, interface, and worker with shared persistent storage.
-Stop it with `docker compose -f backend/infra/compose.yaml down`; this keeps the data volume.
+| Open | Address |
+| :--- | :--- |
+| **Application** | [localhost:8501](http://localhost:8501) |
+| **Interactive API docs** | [127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) |
+
+Follow **Documents → Compare → Policies → Actions**. The seeded policy and rule require confirmation;
+the draft starts **unapproved**. [Guided walkthrough](backend/docs/demo.md).
+
+Stop with `docker compose -f backend/infra/compose.yaml down`. Your data volume is retained.
+For a pinned snapshot, use the [demo release](https://github.com/surajnair17/vendorops-ai/releases/tag/v0.1.0-demo).
 
 ### Native Python
+
 
 Install Git and Python 3.13; Tesseract is needed only for OCR. Expand your platform's instructions:
 
@@ -190,177 +195,142 @@ The worker processes OCR and approved delivery jobs. Press `Ctrl+C` in each term
 
 ### Try the guided demo
 
-With the Docker stack running, seed the example through the API:
-
-```bash
-docker compose -f backend/infra/compose.yaml exec backend python -m backend.scripts.demo
-```
-
-For a native installation, open another terminal with the API running:
+For a native installation, keep the three processes running and open another terminal:
 
 ```powershell
 .\.venv\Scripts\python.exe -m backend.scripts.generate_samples
 .\.venv\Scripts\python.exe -m backend.scripts.demo
 ```
 
-On macOS/Linux, use `.venv/bin/python` in place of the Windows interpreter path.
-Native sample PDFs appear in `backend/artifacts/samples/`. The seeder creates a purchase order, an invoice with
-a price difference, an inactive policy, an unconfirmed rule, and an **unapproved** email draft.
-Follow **Documents → Compare → Policies → Actions**. See the [demo script](backend/docs/demo.md)
-for a ten-minute walkthrough.
+On macOS/Linux, use `.venv/bin/python`. Generated PDFs appear in `backend/artifacts/samples/`.
+To explore quotations, upload `quotations/Q-TERMS-001.pdf` from that directory and follow the
+[quotation walkthrough](backend/docs/quotations.md).
 
-To capture the full flow as a captioned MP4, follow the
-[browser recording instructions](frontend/README.md#record-an-end-to-end-walkthrough).
+<details>
+<summary><strong>Scanned PDFs, OCR setup, and existing installations</strong></summary>
 
-For quotation review, upload `backend/artifacts/samples/quotations/Q-TERMS-001.pdf` in Documents,
-extract its fixture, then open **Quotes**. Set the assessment date to `2026-11-27` to check its
-dates and amounts. Unfamiliar quotes can start with manually reviewed fields. See the
-[quotation walkthrough](backend/docs/quotations.md) for supported formulas and limitations.
+For native OCR, install Tesseract with English language data. If it is not on `PATH`, set
+`VENDOROPS_TESSERACT_COMMAND` in `backend/.env` to its executable path.
 
-### Local OCR and containers
+An image-only PDF returns `no_text` from the stateless **Extract Text** operation. Use the separate
+**Read scanned PDF with local OCR** action, or request OCR from Documents; the worker processes
+the saved review copy. Refresh job status to see the text.
 
-For native OCR, install Tesseract with English language data and set
-`VENDOROPS_TESSERACT_COMMAND` in `backend/.env` to its executable path when it is not on `PATH`.
-Store a scan in Documents, request OCR, and let the worker process it. On PDF Text, an image-only
-upload offers **Read scanned PDF with local OCR**; this separate action saves a review copy and
-shows the recognized text after refreshing job status. The **Extract Text** operation and its
-stateless API still return `no_text` for an image-only document.
+Policy retrieval now uses SQLite cosine search. Existing Chroma installations should follow the
+[migration guide](backend/docs/hardening.md). See [operations](backend/docs/operations.md) for
+restart, backup, restoration, and container commands.
 
-Policy retrieval uses exact cosine search in SQLite. Chroma was removed after unpatched upstream
-security advisories; existing installations should set `VENDOROPS_VECTOR_STORE=sqlite`, uninstall
-`chromadb`, and rebuild policy indexes. [Hardening and migration](backend/docs/hardening.md).
-
-See the [operations guide](backend/docs/operations.md) for container commands, backups, and restore.
-Container builds and the workflow are checked by Linux CI.
+</details>
 
 ## How it works
 
 ```mermaid
-flowchart LR
-    A[PDF upload] --> B[Text extraction / local OCR]
-    B --> C[Validated business record]
-    C --> Q[Quotation dates and arithmetic]
-    Q --> R[Revision-bound assessment]
-    C --> D[Invoice and PO comparison]
-    D --> E[Policy evidence + confirmed rules]
-    E --> F[Review and email draft]
-    F --> G[Approve exact revision]
-    G --> H[Durable worker]
-    H --> I[Simulated delivery]
+flowchart TD
+    A[Digital or scanned PDF] --> B[Extract text · local OCR]
+    B --> C[Review fields · save revision]
+    C --> D[Invoice / PO comparison]
+    C --> E[Quotation assessment]
+    D --> F[Policy evidence · confirmed rules]
+    F --> G[Draft → approve → worker → audit]
 ```
 
-| Layer | Technology | Responsibility |
-| --- | --- | --- |
-| Interface | Streamlit, HTTPX | Uploads, review screens, approvals, metrics |
-| API | FastAPI, Pydantic | HTTP contracts, validation, workflow entry points |
-| Documents | PyMuPDF, Tesseract | Digital text and local scanned-page OCR |
-| Business logic | Python, `Decimal` | Matching, arithmetic, confirmed policy rules |
-| Persistence | SQLite, SQLAlchemy | Revisioned records, audit events, durable jobs |
-| Retrieval | SQLite cosine search | Policy passage retrieval with stored citations |
-| Optional cloud adapters | Bedrock, Titan, S3, SES, Textract | Live extraction, embeddings, storage, email, cloud OCR |
+| Layer | Built with |
+| :--- | :--- |
+| **Experience** | Streamlit · HTTPX |
+| **API & validation** | FastAPI · Pydantic |
+| **Documents & calculations** | PyMuPDF · Tesseract · Python `Decimal` |
+| **State & retrieval** | SQLite · SQLAlchemy · cosine search |
+| **Optional AWS adapters** | Bedrock · Titan embeddings · S3 · SES · Textract |
 
-Fixture extraction recognizes exact generated examples; it does not invent records for unknown
-documents. Fixture retrieval checks offline plumbing; live semantic quality remains unmeasured.
-See [architecture and decisions](backend/docs/architecture.md) for the boundaries.
+### Decisions that matter
+
+- **Evidence stays attached.** Findings reference the exact source revisions and supporting passages.
+- **Money is calculated in Python.** Financial checks use deterministic arithmetic and confirmed rules.
+- **Approval follows the content.** Editing a draft invalidates approval; source corrections make dependent reports stale.
+- **Uncertain delivery stays visible.** The worker records attempts and requires reconciliation before resending an uncertain action.
+
+Fixture extraction recognizes exact generated examples; unknown documents do not receive invented
+fixture records. [Architecture and boundaries](backend/docs/architecture.md).
 
 ## Repository map
 
-Application source stays in two folders. Root files contain shared project and tooling settings.
-
-<details>
-<summary><strong>Explore backend/ and frontend/</strong></summary>
-
 ```text
 vendorops-ai/
-├── backend/
-│   ├── main.py              # FastAPI entry point
-│   ├── worker.py            # Durable background job runner
-│   ├── routes/              # API endpoints by business capability
-│   ├── schemas/             # Validated document and response contracts
-│   ├── services/            # Extraction, comparison, policies, workflows
-│   ├── migrations/          # Versioned SQLite schema
-│   ├── tests/               # API, financial, workflow, and recovery checks
-│   ├── scripts/             # Demo, sample generation, evaluation, backup
-│   ├── docs/                # Documentation hub and presentation assets
-│   └── infra/               # Docker Compose and deployment templates
-├── frontend/
-│   ├── app.py               # Navigation and entry point
-│   ├── client.py            # HTTP boundary and readable error handling
-│   ├── ui.py                # Shared visual shell
-│   ├── views/               # One module per workspace screen
-│   ├── assets/              # Shared presentation styles
-│   ├── scripts/             # Browser screenshots and end-to-end recordings
-│   └── tests/               # Streamlit checks
-├── .github/                 # CI and contribution templates
-├── AGENTS.md                # Coding-agent project instructions
-├── pyproject.toml           # Shared pytest and Ruff configuration
-└── README.md
+├── backend/              FastAPI, business logic, persistence, worker
+│   ├── routes/           HTTP endpoints
+│   ├── schemas/          Validated contracts
+│   ├── services/         Documents, comparisons, policies, actions
+│   ├── tests/            API, financial, workflow, recovery checks
+│   ├── scripts/          Samples, demo, evaluation, backup
+│   ├── infra/            Docker Compose and AWS templates
+│   └── docs/             Guides, evidence, screenshots, recording
+├── frontend/             Streamlit workspace and HTTP client
+│   ├── views/            Screens by workflow stage
+│   ├── scripts/          Screenshots and browser recording
+│   └── tests/            Interface checks
+└── .github/              CI and contribution templates
 ```
 
-Each application folder owns its dependencies, configuration example, Dockerfile, and README.
-Runtime data, PDFs, credentials, local configuration, and generated reports are excluded from Git.
-
-</details>
+Each application folder owns its dependencies, configuration example, and Dockerfile.
+[Backend guide](backend/README.md) · [Frontend guide](frontend/README.md).
 
 ## Verification and current scope
+
+| Area | Verified result |
+| :--- | :--- |
+| **Local workflow** | PDF/OCR, review, comparisons, policies, quotation checks, simulated actions, and recovery tested. |
+| **CI** | Python tests, lint/formatting, dependency audit, HTTP/frontend smoke checks, offline evaluations, and Linux Compose runtime. |
+| **Live S3** | Uploads, checksums, backup download, restoration, and test-resource cleanup verified. |
+| **Live SES** | One approved sandbox email reached Gmail **Spam**; Inbox placement was not achieved. |
+| **Live AI & hosting** | Bedrock adapters and deployment templates exist; model quotas block live AI verification, and the AWS host is not deployed. |
+
+[Verification record](backend/docs/status.md) · [Live AWS evidence](backend/docs/live-verification.md) ·
+[Release notes](backend/docs/release-notes.md) · [Evaluation methodology](backend/docs/evaluation.md).
+
+<details>
+<summary><strong>Run the local checks</strong></summary>
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
 .\.venv\Scripts\python.exe -m ruff check .
+.\.venv\Scripts\python.exe -m ruff format --check .
 .\.venv\Scripts\python.exe -m backend.scripts.smoke
 ```
 
-**Verified November 28, 2026:** 150 Python tests, Ruff lint/formatting, a Chrome walkthrough,
-a 390px mobile layout check, and the Linux container workflow passed.
-[CI run](https://github.com/surajnair17/vendorops-ai/actions/runs/46069042058) ·
-[Hardening evidence](backend/docs/hardening.md) · [Evaluation methodology](backend/docs/evaluation.md).
+Use `.venv/bin/python` on macOS/Linux. The smoke harness starts real servers, uploads through the
+interface, and exercises simulated delivery with isolated data. AWS Guard reports advisory findings;
+a successful report job is not compliance certification. [Hardening evidence](backend/docs/hardening.md).
 
-The smoke harness starts real servers, uploads a PDF through Streamlit, visits every workspace
-screen, and exercises approved **simulated** delivery using an isolated database.
-[Evaluation commands and methodology](backend/docs/evaluation.md) cover fixture, OCR, and live-result scoring.
+</details>
 
-| Area | Status |
-| --- | --- |
-| Local review workflow, comparisons, policies, simulated actions, audit, backup/restore | Implemented and tested |
-| Local OCR | Tested on a small synthetic corpus; customer-scan accuracy is unverified |
-| Quotation fields and deterministic assessments | Implemented locally; ranking and live extraction accuracy remain unverified |
-| Bedrock extraction and Titan embeddings | Adapters and read-only preflight implemented; live attempts blocked by zero regional inference quotas |
-| SES approval and delivery | One real approved send received in Gmail Spam; inbox placement failed |
-| S3 source storage and recovery | Real HTTP uploads, checksums, backup download, restoration, and resource cleanup verified |
-| AWS host deployment | Template and preflight implemented; host not deployed while inference quotas block the full workflow |
-| Learning exercises and teach-back | Intended for the learner to complete |
+**Scope:** one company, one operator, English documents, and one currency per document. This is a
+portfolio PoC. Customer-scan accuracy, live model quality, and multiuser operation are unverified.
+Payments, ERP updates, public signup, quotation ranking, and cumulative fulfilment accounting are
+outside this release. Live calls stay disabled by default.
 
-This is a **single-company, single-operator portfolio PoC**. It supports English documents and one
-currency per document. Public access, multiple tenants, payment execution, ERP integration, currency
-conversion, and cumulative partial-invoice accounting are outside this release.
-Read the [verification record](backend/docs/status.md) before interpreting benchmark claims.
-The [hardening report](backend/docs/hardening.md) covers request limits, crash recovery, verified
-dependency locks, security checks, and the remaining release gates.
-
-**Current cloud blocker:** sign-in and model access were verified in `ap-southeast-2`, but applied
-Nova Lite and Titan inference quotas were zero. Three runtime attempts were throttled. A read-only
-preflight now blocks further live recordings before inference when quotas are unavailable. The
-Free plan remains selected. [AWS setup and quota checks](backend/docs/aws-setup.md#5-verify-each-live-service-separately).
-The separate live S3 and SES checks passed; they do not establish live model accuracy.
-The subsequent [Mumbai and Hyderabad review](backend/docs/live-verification.md#regional-alternatives-reviewed)
-did not establish a usable replacement configuration. Sydney remains selected; no plan upgrade or
-Region migration was performed.
+Sydney remains selected after the [Mumbai and Hyderabad review](backend/docs/live-verification.md#regional-alternatives-reviewed).
+The Free plan is unchanged; cloud results are documented separately from the local demo.
 
 ## Explore further
 
-| I want to… | Start here |
-| --- | --- |
-| Find the right guide | [Documentation hub](backend/docs/README.md) |
-| Understand the backend | [Backend guide](backend/README.md) |
-| Work on a screen | [Frontend guide](frontend/README.md) |
-| Learn while building | [Workbook](backend/docs/learning.md) · [Phase roadmap](backend/docs/roadmap.md) |
-| Try the HTTP contract | [API examples](backend/docs/api.md) |
-| Watch or run a portfolio walkthrough | [Download video](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4) · [Demo guide](backend/docs/demo.md) |
-| Prepare optional cloud verification | [AWS setup](backend/docs/aws-setup.md) · [Cost worksheet](backend/docs/costs.md) |
-| Make a change | [Contributing](.github/CONTRIBUTING.md) |
+| Build understanding | Run and extend |
+| :--- | :--- |
+| [Architecture and decisions](backend/docs/architecture.md) | [API examples](backend/docs/api.md) |
+| [Learning workbook](backend/docs/learning.md) | [Operations and recovery](backend/docs/operations.md) |
+| [Phase-by-phase roadmap](backend/docs/roadmap.md) | [AWS setup and cost controls](backend/docs/aws-setup.md) |
+| [Documentation hub](backend/docs/README.md) | [Contributing guide](.github/CONTRIBUTING.md) |
 
-Built by [Suraj Nair](https://github.com/surajnair17) as a practical Python backend and document-AI learning project.
+---
 
-Feedback and contributions are welcome. [Report a reproducible issue](https://github.com/surajnair17/vendorops-ai/issues/new/choose),
-[suggest a workflow improvement](https://github.com/surajnair17/vendorops-ai/issues/new?template=feature_request.yml),
-or start with the [contribution guide](.github/CONTRIBUTING.md). Use synthetic documents in public examples.
+<p align="center">
+  Built by <a href="https://github.com/surajnair17"><strong>Suraj Nair</strong></a><br>
+  <sub>A practical project in Python backend engineering, document AI, and human-reviewed automation.</sub>
+</p>
+
+<p align="center">
+  <a href="https://github.com/surajnair17/vendorops-ai/issues/new/choose">Report an issue</a> &nbsp;·&nbsp;
+  <a href="https://github.com/surajnair17/vendorops-ai/issues/new?template=feature_request.yml">Suggest an improvement</a> &nbsp;·&nbsp;
+  <a href=".github/CONTRIBUTING.md">Contribute</a>
+</p>
+
+<p align="center"><sub>Use synthetic documents in public examples. Credentials and private documents stay outside the repository.</sub></p>
