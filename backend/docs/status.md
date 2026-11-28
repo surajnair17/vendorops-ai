@@ -8,7 +8,7 @@
 | Browser walkthrough | Fresh [2 minute 41 second recording](https://github.com/surajnair17/vendorops-ai/raw/refs/heads/main/backend/docs/assets/vendorops-demo.mp4) after hardening: real local OCR, fixture AI, simulated email |
 | HTTP and frontend | Real-server upload/review smoke and actual Chrome walkthrough passed |
 | CI | [Hardening release `6bf69d7`](https://github.com/surajnair17/vendorops-ai/actions/runs/46069042058): offline tests, Linux container workflow, and Guard advisory report passed; advisory success is not a compliance pass |
-| AWS | Free plan, sign-in, model access, network, and SES email identity verified; five inference quotas remain zero |
+| AWS | Sign-in renewed; Free plan, model access, network, and SES identity rechecked; all four applicable inference quotas remain zero |
 | Live SES | One approved real send reached Gmail Spam; provider ID matched; Inbox placement failed |
 | Recovery | Local backup restored both source PDFs and the sent action; restart did not resend |
 | Live S3 | Two real HTTP uploads, checksum checks, cloud backup/download, and restoration passed; test bucket and versions removed |
